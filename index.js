@@ -14,6 +14,7 @@ process.on('SIGTERM', function(){ if (config.SIGTERM==undefined) {config.SIGTERM
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use('(/blink)?/', express.static(__dirname + '/public'));
 app.use('(/blink)?/:file?', function(req,res) {
 	//res.header("Access-Control-Allow-Origin", "*");
 	//res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -92,12 +93,12 @@ app.use('(/blink)?/:file?', function(req,res) {
 		case 'delete_authtoken':
 			blink.authtoken=undefined;
 			
-		case undefined:
-			res.sendFile('index.html',{root:path.join(__dirname,'public')});
-			break;
+		//case undefined:
+		//	res.sendFile('index.html',{root:path.join(__dirname,'public')});
+		//	break;
 
 		default:
-			res.end();
+			res.sendStatus(404);
 			break;
 
 	}

@@ -1,0 +1,11 @@
+{
+	"short_name":"BLINK",
+	"name":"BLINK",
+	"icons":[
+		{"src":"/blink/blink180.png","sizes":"180x180","type":"image/png"}
+	],
+	"start_url":"/blink",
+	"background_color":"#FBFBFB",
+	"theme_color":"#FBFBFB",
+	"display":"standalone"
+}
