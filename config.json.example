@@ -1,0 +1,14 @@
+{
+  "port": 3000,
+  "headless_mode": false,
+
+  "email": "",
+  "password": "",
+
+  "unique_id": "",
+  
+  "account_id": "",
+  "client_id": "",
+  "authtoken": "",
+  "region_tier": ""
+}

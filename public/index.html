@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang=de>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+<!--
+	<link rel="icon" type="image/png" href="vcblry180.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="vcblry180.png">
+	<link rel="manifest" href="manifest.json">
+-->
+	<meta name="theme-color" content="#fbfbfb">
+	<meta name="Description" content="Blink">
+	<title>BLINK</title>
+	<script>
+
+		function go() {
+			blink_get_homescreen();
+		}
+
+		function display(homescreen) {
+			let h=JSON.parse(homescreen);
+			let e=document.getElementById('main');
+			e.innerHTML='HELLO. THIS IS BLINK.';
+			if (h.account) {
+				let cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
+				e.innerHTML+='<p><a href=cam.jpg?'+Math.random()+'><img style=width:100%; src=cam.jpg></a><br>'+cam_info+'<p><a href=javascript:blink_login_refresh()>login</a> | <a href=javascript:blink_verify()>verify</a><!-- | <a href=javascript:blink_logout()>logout</a> | --><br><a href=javascript:blink_get_homescreen()>get_homescreen</a> | <a href=javascript:blink_update()>update</a> | <a href=javascript:blink_update_cam()>update_cam</a><!-- | <a href=javascript:blink_get_log()>get_log</a>-->';
+			} else {
+				e.innerHTML+='<br>PLEASE <a href=javascript:blink_login_refresh()>REFRESH</a> OR <a href=javascript:blink_login()>LOG IN</a>.';
+			}
+		}
+
+		function blink_login_refresh() {blink_login(true)}
+		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
+			if (just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
+				get('api','{"command":"login"}',(r)=>{
+					log(r);
+					let rj=JSON.parse(r);
+					if (!rj.error) {blink_update()} else {blink_login(false)}
+				});
+			} else {
+				let email=prompt('Enter your email to connect this server to Blink.','')
+				if (email) {
+					let pw=prompt('Ok, '+email+'.\nNow enter your password.','')
+					if (pw) {
+						get('api','{"command":"login","email":"'+email+'","password":"'+pw+'"}',(r)=>{
+							log(r);
+							blink_update();
+						});
+					};
+				};		
+			};
+		}
+		function blink_verify() {
+			let pin=prompt('Blink requests verification.\nPlease check your email for the required PIN.','');
+			if (pin) {
+				get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
+					log(r);
+					blink_update();
+				});
+			};
+		}
+		function blink_logout() {
+			if (confirm('This will disconnect this server from Blink.\nDo you really want this?')) {
+				get('api','{"command":"logout"}',(r)=>{
+					log(r);
+					blink_update();
+				});
+			};
+		}
+		function blink_update_cam() {get('api','{"command":"update_cam"}',(r)=>{log(r);log('waiting for 5 seconds...');setTimeout(()=>{blink_update()},5000)})}
+		function blink_update() {get('api','{"command":"update"}',(r)=>{log(r);display(r)})} // check if verification is required
+		function blink_get_homescreen() {get('api','{"command":"get_homescreen"}',(r)=>{log(r);display(r)})}
+		function blink_get_log() {get('api','{"command":"get_log"}',(r)=>{log(r)})}
+
+		function get(file,json_request,callback) {callAPI('POST',window.location.href.replace(/[^/]*$/,'')+file,json_request,(r)=>{callback(r)})}
+		function callAPI(method,URI,reqobj,callback) {
+			if (!(URI).startsWith('http')) {log('fetching '+URI+' aborted');callback();return true;}
+			var t=stopwatch();
+			var req = new XMLHttpRequest();
+			req.onreadystatechange = function() {if (this.readyState == 4) {
+				log(method+' '+URI+': '+stopwatch(t)+'ms'); 
+				if (this.status<500) {callback(this.responseText)} else {callback()}}
+			};
+			req.open(method,URI,true);
+			req.setRequestHeader("Content-Type","application/json;charset=UTF-8");
+			req.send(reqobj);
+		}
+		function stopwatch(time) {if (typeof time != 'undefined') {return new Date()-time} else {return new Date()}}
+		function IsJsonString(str) {let json=undefined; try {json=JSON.parse(str)} catch (e) {return false}; return json[0]?true:false}
+
+		function log(l) {console.log(l)};
+
+	</script>
+	<style>
+		* {box-sizing: border-box;}
+		html, body, section, div, input, textarea, select, button {border-radius: 0.4rem;font-family: Verdana, Geneva, sans-serif; font-size: 1.3rem; width:100%; overflow-wrap:break-word;}
+		body {border:0; padding:0%; margin:0; background-color:#fbfbfb; color: #000;}
+
+		.bigscreen {padding:0rem 1rem 1rem 1rem; margin:0;}
+		.screen {min-width:300px; max-width:420px; margin:auto;}
+
+		@media only screen and (max-width: 320px) {
+			.bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
+			.screen {min-width:260px;}
+			html, body, section, div, input, textarea, select, button {font-size: 1rem}
+		}
+		@media only screen and (min-width: 768px) {
+			.screen {min-width:640px; max-width:640px; margin:auto;}
+			html, body, section, div, input, textarea, select, button {font-size: 1.5rem}
+		}
+
+		@media print {
+			.screen {max-width:100%; margin:auto;}
+			.word, .label, #select_list {display:none}
+			body {background-color:#FFFFFF;}
+			.vlHeader {font-size: 1rem !important; margin:0 !important; border-bottom:0px solid #C0C0C0 !important;}
+			.vlA,.vlB,.vlAB {width:48% !important; font-size: 1rem !important; background-color:#FFFFFF !important; margin:0 !important;padding:0.2rem 0.2rem !important; border-top:1px solid #C0C0C0;}
+			.vlAh,.vlBh {width:48% !important; font-size: 1rem !important; background-color:#FFFF88 !important; margin:0 !important;padding:0.2rem 0.2rem !important; border-top:1px solid #C0C0C0;}
+		}
+
+		a {color:#000; text-decoration:none;}
+		a:hover {color:#0078D4;}
+		.afake {cursor:pointer; color:#000}
+		.afake:hover {color:#0078D4;}
+		.stats {display:flex; margin:1rem 0 0.4rem 0; cursor:pointer;}
+		.main {text-align:center;}
+		.results {font-size:1.2rem; text-align:center; margin:1.2rem 0 2rem 0;}
+		.dot {height:2.2rem; margin:0.5rem 1px 0 0; border-radius:0rem; background-color:#F0F0F0;}
+		.ok {background-color:#00DD00;}
+		.assist {background-color:#F0A000;}
+		.error {background-color:#DD0000;}
+		.first {margin-left:0; border-radius: 0.4rem 0 0 0.4rem;}
+		.last {margin-right:0; border-radius: 0 0.4rem 0.4rem 0;}
+
+		.word {transition:0.25s; font-size:1.4rem; outline-width: 0; padding:0.4rem 0.4rem; margin:0.4rem 0rem;}
+		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
+		.btn_mini_on {transition:0.2s; font-size:1rem; width:33%; border: 2px solid #505050;background-color:#505050;color:#FFF;cursor:pointer;}
+		.btn_mini_off {transition:0s; font-size:1rem; width:33%; border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#AAA;cursor:pointer;}
+		.btn_check {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer;}
+		.wordA {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#000; padding:0.8rem 0.4rem; margin:0.5rem 0rem 0.5rem 0; border-radius: 0}
+		.wordB {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
+		.wordB_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;}
+		.wordB_assist {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer;}
+		.wordB_ok {border: 2px solid #00DD00;background-color:#00DD00;color:#FFF;cursor:pointer;}
+		.wordB_error {border: 2px solid #DD0000;background-color:#DD0000;color:#FFF; text-decoration:line-through}
+		.scrambled {} /*{opacity:0.4;color:#000000;background-color:#000000;margin-right:2px}*/
+
+		.optionOK {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer; width:72%; float:right;}
+		.optionHELP {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer; width:25%; float:left;}
+
+		.label {font-size:0.8rem;width:100%;text-align:left;border-bottom:0px solid #F0F0F0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0.1rem 0.2rem;}
+		select {font-size:1.3rem; padding:0.2rem 0.4rem; margin:0.2rem 0 0.2rem 0; background-color:#F0F0F0; color:#000;border: 2px solid #F0F0F0; outline-width: 0;}
+		textarea {font-size:0.8rem; padding:0.2rem 0.4rem; margin:0rem; background-color:#F0F0F0; color:#000;border: 2px solid #F0F0F0; outline-width: 0;}
+		.vl {margin-bottom:1.4rem; }
+		.vlHeader {font-size:0.8rem;width:100%;text-align:left;border-bottom:1px solid #F0F0F0;border-radius:0;margin:1rem 0 0.2rem 0;padding:0.1rem 0.2rem;}
+		.vlA {font-size:0.8rem;width:49%;float:left;background-color:#F0F0F0;text-align:right;border-radius:0;margin:2px 0;padding:0 0.2rem;}
+		.vlB {font-size:0.8rem;width:49%;float:right;background-color:#F0F0F0;text-align:left;border-radius:0;margin:2px 0;padding:0 0.2rem;}
+		.vlAh {font-size:0.8rem;width:49%;float:left;background-color:#FFFF88;text-align:right;border-radius:0;margin:2px 0;padding:0 0.2rem;}
+		.vlBh {font-size:0.8rem;width:49%;float:right;background-color:#FFFF88;text-align:left;border-radius:0;margin:2px 0;padding:0 0.2rem;}
+		.vlAB {font-size:0.8rem;width:100%;text-align:center;background-color:#FFFF88;border-radius:0;margin:2px 0;padding:0 0.2rem;}
+		.clear {clear:both;}
+
+		.star {background-repeat:no-repeat; background-position:center; background-size:contain; display:flex;}
+		.star1 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');}
+		.star2 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 5.173l2.335 4.817 5.305.732-3.861 3.71.942 5.27-4.721-2.524v-12.005zm0-4.586l-3.668 7.568-8.332 1.151 6.064 5.828-1.48 8.279 7.416-3.967 7.416 3.966-1.48-8.279 6.064-5.827-8.332-1.15-3.668-7.569z"/></svg>');}
+		.star3 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 5.173l2.335 4.817 5.305.732-3.861 3.71.942 5.27-4.721-2.524-4.721 2.525.942-5.27-3.861-3.71 5.305-.733 2.335-4.817zm0-4.586l-3.668 7.568-8.332 1.151 6.064 5.828-1.48 8.279 7.416-3.967 7.416 3.966-1.48-8.279 6.064-5.827-8.332-1.15-3.668-7.569z"/></svg>');}
+	</style>
+</head>
+<body onload='go()'>
+	<div id=bigscreen class=bigscreen>
+		<div id=screen class=screen>
+			<div id=stats class=stats></div>
+			<div id=main class=main>HELLO.</div>
+		</div>
+	</div>
+</body>
+</html>
