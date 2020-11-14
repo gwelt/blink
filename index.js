@@ -57,6 +57,12 @@ app.use('(/blink)?/:file?', function(req,res) {
 					});
 					break;
 
+				case 'get_video_events':
+					blink.GET_VIDEO_EVENTS((r)=>{
+						res.set('Content-Type','application/json'); res.end(r);
+					});
+					break;
+
 				case 'get_homescreen':
 					res.set('Content-Type','application/json');
 					res.end(blink.homescreen?JSON.stringify(blink.homescreen):'{}');

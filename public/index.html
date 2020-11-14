@@ -88,6 +88,7 @@
 				display(r);
 			});
 		}
+		function blink_get_video_events() {get('api','{"command":"get_video_events"}',(r)=>{log(r)})}
 		function blink_get_homescreen() {get('api','{"command":"get_homescreen"}',(r)=>{log(r);display(r)})}
 		function blink_get_log() {get('api','{"command":"get_log"}',(r)=>{log(r)})}
 

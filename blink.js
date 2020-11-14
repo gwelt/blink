@@ -106,6 +106,16 @@ Blink.prototype.UPDATE_CAM = function (c,n,callback) {
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
 }
 
+Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
+    this.write_log('... GET_VIDEO_EVENTS');
+    if (this.account_id) {    	
+		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since=1970-01-01T00%3A00%3A00%2B0000&page=1'),'',false,(r)=>{
+	     	this.write_log('>OK GET_VIDEO_EVENTS');
+			callback(r);
+		});
+    } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
+}
+
 Blink.prototype.is_errormessage = function (o) {
 	if (o.message) {
 		this.write_log('>ERROR '+o.message+' (CODE:'+o.code+')');
