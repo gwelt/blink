@@ -29,36 +29,30 @@ app.use('(/blink)?/:file?', function(req,res) {
 					if (req.body.password) {blink.password=req.body.password};
 					blink.LOGIN((r)=>{
 						res.set('Content-Type','application/json'); res.end(r);
-						// TODO: disable sending result (r) in prod, because it contains authtoken
-						//res.set('Content-Type','text/plain'); res.end('OK');
 					});
 					break;
 
 				case 'verify':
 					blink.VERIFY(req.body.pin,(r)=>{
 						res.set('Content-Type','application/json'); res.end(r);
-						//res.set('Content-Type','text/plain'); res.end('OK');
 					});
 					break;
 
 				case 'logout':
 					blink.LOGOUT((r)=>{
 						res.set('Content-Type','application/json'); res.end(r);
-						//res.set('Content-Type','text/plain'); res.end('OK');
 					});
 					break;
 
 				case 'update':
 					blink.UPDATE((r)=>{
 						res.set('Content-Type','application/json'); res.end(r);
-						//res.set('Content-Type','text/plain'); res.end('OK');
 					});
 					break;
 
 				case 'update_cam':
 					blink.UPDATE_CAM(undefined,undefined,(r)=>{
 						res.set('Content-Type','application/json'); res.end(r);
-						//res.set('Content-Type','text/plain'); res.end('OK');
 					});
 					break;
 
@@ -74,7 +68,6 @@ app.use('(/blink)?/:file?', function(req,res) {
 
 				default:
 					res.end('{"error":"unknown api-call"}');
-					//res.end(JSON.stringify(req.body));
 					break;
 
 			}
@@ -89,12 +82,13 @@ app.use('(/blink)?/:file?', function(req,res) {
 			});
 			break;
 
+		// for testing
 		case 'delete_credentials':
 			blink.email=undefined;
 			blink.password=undefined;
 			res.end();
 			break;
-
+		// for testing
 		case 'delete_authtoken':
 			blink.authtoken=undefined;
 			

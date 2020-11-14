@@ -14,7 +14,7 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.region_tier=region_tier;
 	
 	this.homescreen={};
-	this.thumbnails=[];
+	this.thumbnails=new ThumbnailCache();
 	this.log=new Logger();
 	return this;
 }
@@ -33,7 +33,7 @@ Blink.prototype.LOGIN = function (callback) {
 			    this.write_log('>OK LOGIN '+this.email+' | ACCOUNT_ID '+this.account_id+' | CLIENT_ID '+this.client_id+' | AUTHTOKEN '+this.authtoken+' | REGION_TIER '+this.region_tier);
 			    this.write_log(r);
 			    if (rj.client.verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
-			}
+			} else {this.email=undefined;this.password=undefined;}
 		    callback(r);
 		});
 	} else {this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');}
@@ -55,6 +55,8 @@ Blink.prototype.LOGOUT = function (callback) {
 	if (this.account_id&&this.client_id) {
 		this.request(this.get_blinkRequestOptions('/api/v4/account/'+this.account_id+'/client/'+this.client_id+'/logout','POST'),'',false,(r)=>{
 		    this.write_log('>OK LOGOUT '+r);
+			this.email=undefined;
+			this.password=undefined;
 			callback(r);
 		});
 	} else {this.write_log('>ERROR ACCOUNT_ID AND CLIENT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID AND CLIENT_ID REQUIRED."}');}
@@ -76,12 +78,19 @@ Blink.prototype.UPDATE = function (callback) {
 
 Blink.prototype.GET_IMAGE = function (c,callback) {
     this.write_log('... GET_IMAGE');
-	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined;
+	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined; // TODO: SELECT CAM INSTEAD OF ALWAYS USING CAMEARAS[0]
 	if (cam) {
-	    this.request(this.get_blinkRequestOptions(cam.thumbnail+'.jpg'),'',true,(r)=>{
-	    	this.write_log('>OK GET_IMAGE (NETWORK_ID '+cam.network_id+' | CAM_ID '+cam.id+')');
-	    	callback(r);
-	    });	
+		let cached=this.thumbnails.read(cam.thumbnail);
+		if (cached) {
+		    this.write_log('>OK GET_IMAGE [FROM CACHE] '+cam.thumbnail);
+			callback(cached)
+		} else {
+		    this.request(this.get_blinkRequestOptions(cam.thumbnail+'.jpg'),'',true,(r)=>{
+		    	this.write_log('>OK GET_IMAGE '+cam.thumbnail);
+		    	this.thumbnails.add(new Thumbnail(cam.thumbnail,r));
+		    	callback(r);
+		    });	
+		}
 	} else {this.write_log('>ERROR IMAGE/CAM NOT AVAILABLE.'); callback('{"error":"IMAGE/CAM NOT AVAILABLE."}');}
 }
 
@@ -134,6 +143,11 @@ Blink.prototype.request = function (options,data,is_binary,callback) {
 	req.write(data);
 	req.end();
 }
+
+function Thumbnail(name,data) {this.name=name;this.data=data;}
+function ThumbnailCache(max_thumbs_to_cache) {this.max_thumbs_to_cache=max_thumbs_to_cache||1; this.thumbnails=[];}
+ThumbnailCache.prototype.add = function (thumbnail) {this.thumbnails.push(thumbnail); while (this.thumbnails.length>this.max_thumbs_to_cache) {this.thumbnails.splice(0,1)};}
+ThumbnailCache.prototype.read = function (name) {return (this.thumbnails[0]&&(this.thumbnails[0].name==name))?this.thumbnails[0].data:false;} // TODO: search for name
 
 function Logger(maxlength) {this.maxlength=(maxlength||25); this.list=[];}
 Logger.prototype.add = function (s) {this.list.push(s); while (this.list.length>this.maxlength) {this.list.splice(0,1)};}

@@ -2,11 +2,9 @@
 <html lang=de>
 <head>
 	<meta name="viewport" content="width=device-width,initial-scale=1">
-<!--
-	<link rel="icon" type="image/png" href="vcblry180.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="vcblry180.png">
+	<link rel="icon" type="image/png" href="blink180.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="blink180.png">
 	<link rel="manifest" href="manifest.json">
--->
 	<meta name="theme-color" content="#fbfbfb">
 	<meta name="Description" content="Blink">
 	<title>BLINK</title>
@@ -21,20 +19,28 @@
 			let e=document.getElementById('main');
 			e.innerHTML='HELLO. THIS IS BLINK.';
 			if (h.account) {
-				let cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
-				e.innerHTML+='<p><a href=cam.jpg?'+Math.random()+'><img style=width:100%; src=cam.jpg></a><br>'+cam_info+'<p><a href=javascript:blink_login_refresh()>login</a> | <a href=javascript:blink_verify()>verify</a><!-- | <a href=javascript:blink_logout()>logout</a> | --><br><a href=javascript:blink_get_homescreen()>get_homescreen</a> | <a href=javascript:blink_update()>update</a> | <a href=javascript:blink_update_cam()>update_cam</a><!-- | <a href=javascript:blink_get_log()>get_log</a>-->';
+				if (h.cameras) {
+					let cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
+					let seed=Math.random();
+					e.innerHTML+='<br><br><a href=cam.jpg?'+seed+'><img style=width:100%; src=cam.jpg?'+seed+'></a><br>'+cam_info+'<br><br>';
+					//e.innerHTML+='<a href=javascript:blink_login(true)>login</a> | <a href=javascript:blink_verify()>verify</a> | <a href=javascript:blink_logout()>logout</a> | ';
+					//e.innerHTML+='<a href=javascript:blink_get_log()>get_log</a> | <a href=javascript:blink_get_homescreen()>get_homescreen</a> | <a href=javascript:blink_update()>update homescreen</a> | <a href=javascript:blink_update_cam()>update cam</a>';
+					e.innerHTML+='<button id="btn_update" class=btn onclick="blink_update_cam();this.blur()">update</button>';					
+				} else {e.innerHTML+='<br>I CAN\'T SEE CAMERAS HERE.'}
 			} else {
-				e.innerHTML+='<br>PLEASE <a href=javascript:blink_login_refresh()>REFRESH</a> OR <a href=javascript:blink_login()>LOG IN</a>.';
+				e.innerHTML+='<br>PLEASE <a href=javascript:blink_login(true)>LOG IN</a>.';
+				blink_login(true);
 			}
 		}
 
-		function blink_login_refresh() {blink_login(true)}
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
 			if (just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
 				get('api','{"command":"login"}',(r)=>{
 					log(r);
 					let rj=JSON.parse(r);
-					if (!rj.error) {blink_update()} else {blink_login(false)}
+					if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {
+						if (!rj.error) {blink_update()} else {blink_login(false)}
+					}
 				});
 			} else {
 				let email=prompt('Enter your email to connect this server to Blink.','')
@@ -43,7 +49,8 @@
 					if (pw) {
 						get('api','{"command":"login","email":"'+email+'","password":"'+pw+'"}',(r)=>{
 							log(r);
-							blink_update();
+							let rj=JSON.parse(r);
+							if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {blink_update()}
 						});
 					};
 				};		
@@ -59,15 +66,28 @@
 			};
 		}
 		function blink_logout() {
-			if (confirm('This will disconnect this server from Blink.\nDo you really want this?')) {
+			if (confirm('This will disconnect this server from Blink.\nDo you really want to do this?')) {
 				get('api','{"command":"logout"}',(r)=>{
 					log(r);
 					blink_update();
 				});
 			};
 		}
-		function blink_update_cam() {get('api','{"command":"update_cam"}',(r)=>{log(r);log('waiting for 5 seconds...');setTimeout(()=>{blink_update()},5000)})}
-		function blink_update() {get('api','{"command":"update"}',(r)=>{log(r);display(r)})} // check if verification is required
+		function blink_update_cam() {
+			get('api','{"command":"update_cam"}',(r)=>{
+				log(r);
+				log('waiting for 5 seconds...');
+				let bu=document.getElementById('btn_update');
+				bu.className='wordB_disabled';
+				setTimeout(()=>{bu.className='btn';blink_update();},5000)
+			});
+		}
+		function blink_update() {
+			get('api','{"command":"update"}',(r)=>{
+				log(r);
+				display(r);
+			});
+		}
 		function blink_get_homescreen() {get('api','{"command":"get_homescreen"}',(r)=>{log(r);display(r)})}
 		function blink_get_log() {get('api','{"command":"get_log"}',(r)=>{log(r)})}
 
