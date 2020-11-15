@@ -15,6 +15,22 @@ app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('(/blink)?/', express.static(__dirname + '/public'));
+app.use('(/blink)?/media/thumbnail/:media_id?', function(req,res) {
+	blink.GET_MEDIA_THUMBNAIL(req.params.media_id||undefined,(r)=>{
+		if (r) {
+			res.set('Content-Type','image/jpeg');
+			res.end(r,'binary');
+		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE CAM.JPG HERE.')}
+	});
+});
+app.use('(/blink)?/media/:media_id?', function(req,res) {
+	blink.GET_MEDIA(req.params.media_id||undefined,(r)=>{
+		if (r) {
+			res.set('Content-Type','video/mp4');
+			res.end(r,'binary');
+		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE MEDIA.MP4 HERE.')}
+	});
+});
 app.use('(/blink)?/:file?', function(req,res) {
 	//res.header("Access-Control-Allow-Origin", "*");
 	//res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -86,6 +102,15 @@ app.use('(/blink)?/:file?', function(req,res) {
 					res.set('Content-Type','image/jpeg');
 					res.end(r,'binary');
 				} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE CAM.JPG HERE.')}
+			});
+			break;
+
+		case 'media.mp4':
+			blink.GET_MEDIA(undefined,(r)=>{
+				if (r) {
+					res.set('Content-Type','video/mp4');
+					res.end(r,'binary');
+				} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE MEDIA.MP4 HERE.')}
 			});
 			break;
 

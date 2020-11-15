@@ -15,6 +15,7 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	
 	this.homescreen={};
 	this.thumbnails=new ThumbnailCache();
+	this.videoevents={};
 	this.log=new Logger();
 	return this;
 }
@@ -76,18 +77,18 @@ Blink.prototype.UPDATE = function (callback) {
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
 }
 
-Blink.prototype.GET_IMAGE = function (c,callback) {
+Blink.prototype.GET_IMAGE = function (cam,callback) {
     this.write_log('... GET_IMAGE');
-	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined; // TODO: SELECT CAM INSTEAD OF ALWAYS USING CAMEARAS[0]
-	if (cam) {
-		let cached=this.thumbnails.read(cam.thumbnail);
+	let image=((this.homescreen.cameras)?this.homescreen.cameras[0].thumbnail+'.jpg':undefined);
+	if (image) {
+		let cached=this.thumbnails.read(image);
 		if (cached) {
-		    this.write_log('>OK GET_IMAGE [FROM CACHE] '+cam.thumbnail);
+		    this.write_log('>OK GET_IMAGE [FROM CACHE] '+image);
 			callback(cached)
 		} else {
-		    this.request(this.get_blinkRequestOptions(cam.thumbnail+'.jpg'),'',true,(r)=>{
-		    	this.write_log('>OK GET_IMAGE '+cam.thumbnail);
-		    	this.thumbnails.add(new Thumbnail(cam.thumbnail,r));
+		    this.request(this.get_blinkRequestOptions(image),'',true,(r)=>{
+		    	this.write_log('>OK GET_IMAGE '+image);
+		    	this.thumbnails.add(new Thumbnail(image,r));
 		    	callback(r);
 		    });	
 		}
@@ -108,12 +109,41 @@ Blink.prototype.UPDATE_CAM = function (c,n,callback) {
 
 Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
     this.write_log('... GET_VIDEO_EVENTS');
-    if (this.account_id) {    	
-		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since=1970-01-01T00%3A00%3A00%2B0000&page=1'),'',false,(r)=>{
-	     	this.write_log('>OK GET_VIDEO_EVENTS');
+    if (this.account_id) {
+    	let d=new Date();
+    	d.setDate(d.getDate()-1);
+    	//d.toISOString().slice(0,-5);
+		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since='+d.toISOString().slice(0,-5)+'%2B0000&page=1'),'',false,(r)=>{
+			let rj=JSON.parse(r); 
+			if (!this.is_errormessage(rj)) {
+				this.videoevents=rj;
+		     	this.write_log('>OK GET_VIDEO_EVENTS');
+			} else {this.videoevents={}}
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
+}
+
+Blink.prototype.GET_MEDIA = function (m,callback) {
+    this.write_log('... GET_MEDIA');
+	let media=(m?'/api/v2/accounts/'+this.account_id+'/media/clip/'+m+'.mp4':undefined)||((this.videoevents.media)?this.videoevents.media[0].media:undefined);
+	if (media) {
+	    this.request(this.get_blinkRequestOptions(media),'',true,(r)=>{
+	    	this.write_log('>OK GET_MEDIA '+media);
+	    	callback(r);
+	    });	
+	} else {this.write_log('>ERROR MEDIA NOT AVAILABLE.'); callback('{"error":"MEDIA NOT AVAILABLE."}');}
+}
+
+Blink.prototype.GET_MEDIA_THUMBNAIL = function (t,callback) {
+    this.write_log('... GET_MEDIA_THUMBNAIL');
+	let thumbnail=(t?'/api/v2/accounts/'+this.account_id+'/media/thumb/'+t:undefined)||((this.videoevents.media)?this.videoevents.media[0].thumbnail:undefined);
+	if (thumbnail) {
+	    this.request(this.get_blinkRequestOptions(thumbnail),'',true,(r)=>{
+	    	this.write_log('>OK GET_MEDIA_THUMBNAIL '+thumbnail);
+	    	callback(r);
+	    });	
+	} else {this.write_log('>ERROR MEDIA_THUMBNAIL NOT AVAILABLE.'); callback('{"error":"MEDIA_THUMBNAIL NOT AVAILABLE."}');}
 }
 
 Blink.prototype.is_errormessage = function (o) {
