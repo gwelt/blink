@@ -96,8 +96,8 @@ Blink.prototype.GET_IMAGE = function (c,callback) {
 
 Blink.prototype.UPDATE_CAM = function (c,n,callback) {
     this.write_log('... UPDATE_CAM');
-	let cam=c||(this.homescreen)?this.homescreen.cameras[0]:undefined;
-	let network=n||(this.homescreen)?this.homescreen.networks[0]:undefined;
+	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined;
+	let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
 	if (cam&&network) {
 	    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam.id+'/thumbnail','POST'),'',false,(r)=>{
 	     	this.write_log('>OK UPDATE_CAM '+cam.id+' @ '+network.id+' | last updated '+cam.updated_at);
