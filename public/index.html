@@ -38,8 +38,8 @@
 				cdate.innerHTML=h.cameras[0].updated_at;
 			} else {
 				cjpg.src='cam_default.jpg';
-				cname.innerHTML='no name';
-				cdate.innerHTML='no date';
+				cname.innerHTML='';
+				cdate.innerHTML='';
 			}
 			//cname.innerHTML=cam_info+'<br><button id="btn_update" class=btn onclick="blink_update_cam()">update</button>';					
 			//cinfo.innerHTML+='<br><br><button id="btn_display" class=btn onclick="blink_get_homescreen()">blink_get_homescreen</button>';					
@@ -181,7 +181,7 @@
 	<div id=bigscreen class=bigscreen>
 		<div id=screen class=screen>
 			<div id=header>HELLO. THIS IS BLINK.</div>
-			<div id=cam_image><img id=cam_jpg style=min-height:360px></div>
+			<div id=cam_image><img id=cam_jpg src=cam_default.jpg></div>
 			<div id=cam_name class=cam_info></div>
 			<div id=cam_date class=cam_info></div>
 			<button id="btn_update" class=btn onclick="blink_update_cam()">update</button>
