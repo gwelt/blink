@@ -12,33 +12,36 @@
 
 		function go() {
 			document.getElementById('cam_jpg').onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
-			display();
-			//blink_get_homescreen();
-			setTimeout(()=>{blink_get_homescreen()},500);
+			//display();
+			//display();setTimeout(()=>{blink_get_homescreen()},500);
+			blink_get_homescreen();
 		}
 
 		function display(homescreen) {
 			let h=homescreen?JSON.parse(homescreen):undefined;
 			if (h&&!h.account&&confirm('Do you want to log in?')) {blink_login(true)};
 			
-			let cinfo=document.getElementById('cam_info');
 			let cjpg=document.getElementById('cam_jpg');
+			let cname=document.getElementById('cam_name');
+			let cdate=document.getElementById('cam_date');
 			let cam_info='';
 			
 			if (h&&h.cameras) {
 				let seed=Math.random();
-				let delay=0.3;
-				cjpg.style.transition = "all "+delay+"s";
-				cjpg.style.transform = "scale(0.3)";
+				let delay=0.2;
+				cjpg.style.transition="all "+delay+"s";
+				cjpg.style.transform="scale(0.3)";
 				////#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
 				setTimeout(()=>{cjpg.src='cam.jpg?'+seed;},delay*1000);
 				setTimeout(()=>{cjpg.style.transform = "scale(1)";},delay*1000);
-
-				cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
+				cname.innerHTML=h.cameras[0].name;
+				cdate.innerHTML=h.cameras[0].updated_at;
 			} else {
 				cjpg.src='cam_default.jpg';
+				cname.innerHTML='no name';
+				cdate.innerHTML='no date';
 			}
-			cinfo.innerHTML=cam_info+'<br><button id="btn_update" class=btn onclick="blink_update_cam()">update</button>';					
+			//cname.innerHTML=cam_info+'<br><button id="btn_update" class=btn onclick="blink_update_cam()">update</button>';					
 			//cinfo.innerHTML+='<br><br><button id="btn_display" class=btn onclick="blink_get_homescreen()">blink_get_homescreen</button>';					
 			//cjpg.onclick=()=>{window.open(cjpg.src,'_self');};
 		}
@@ -88,10 +91,15 @@
 				log(r);
 				
 				log('waiting for 5 seconds...');
+				document.getElementById('cam_jpg').style.transform="scale(0.9)";
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.8)";},1000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.7)";},2000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.6)";},3000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.5)";},4000)
+				
 				let bu=document.getElementById('btn_update');
 				bu.blur();
 				bu.className='btn_disabled';
-				
 				setTimeout(()=>{bu.className='btn';blink_update();},5000)
 			});
 		}
@@ -147,24 +155,25 @@
 			body {background-color:#FFFFFF;}
 		}
 
-		#header {margin:1.2rem 0 0.8rem 0;}
+		#header {margin:1.4rem 0 1rem 0;}
 		#cam_image {display:inline-block; background-color:#f0f0f0; overflow:hidden;} /*1280*720*/
 		#cam_image img {display:block; width:100%; cursor:pointer;}
-		/*
-		#cam_image img {display:block; width:100%; transition:transform 0.2s; cursor:pointer;}
-		#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
-		*/
+		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0rem 0.2rem;}
 
 		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
+		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;margin:0.2rem 0 0.2rem 0;}
+		.btn_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;margin:0.2rem 0 0.2rem 0;}
+
+		/*
 		.afake {cursor:pointer; color:#000; text-decoration:underline;}
 		.afake:hover {color:#0078D4;}
-		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
-		.btn_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;}
-
 		.label {font-size:0.8rem;width:100%;text-align:left;border-bottom:0px solid #F0F0F0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0.1rem 0.2rem;}
 		select {font-size:1.3rem; padding:0.2rem 0.4rem; margin:0.2rem 0 0.2rem 0; background-color:#F0F0F0; color:#000;border: 2px solid #F0F0F0; outline-width: 0;}
 		.clear {clear:both;}
+		#cam_image img {display:block; width:100%; transition:transform 0.2s; cursor:pointer;}
+		#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
+		*/
 
 	</style>
 </head>
@@ -172,8 +181,10 @@
 	<div id=bigscreen class=bigscreen>
 		<div id=screen class=screen>
 			<div id=header>HELLO. THIS IS BLINK.</div>
-			<div id=cam_image><img id=cam_jpg></div>
-			<div id=cam_info class=cam_info></div>
+			<div id=cam_image><img id=cam_jpg style=min-height:360px></div>
+			<div id=cam_name class=cam_info></div>
+			<div id=cam_date class=cam_info></div>
+			<button id="btn_update" class=btn onclick="blink_update_cam()">update</button>
 		</div>
 	</div>
 </body>
