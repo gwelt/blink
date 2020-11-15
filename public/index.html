@@ -11,26 +11,36 @@
 	<script>
 
 		function go() {
-			blink_get_homescreen();
+			document.getElementById('cam_jpg').onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			display();
+			//blink_get_homescreen();
+			setTimeout(()=>{blink_get_homescreen()},500);
 		}
 
 		function display(homescreen) {
-			let h=JSON.parse(homescreen);
-			let e=document.getElementById('main');
-			e.innerHTML='HELLO. THIS IS BLINK.';
-			if (h.account) {
-				if (h.cameras) {
-					let cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
-					let seed=Math.random();
-					e.innerHTML+='<br><br><a href=cam.jpg?'+seed+'><img style=width:100%; src=cam.jpg?'+seed+'></a><br>'+cam_info+'<br><br>';
-					//e.innerHTML+='<a href=javascript:blink_login(true)>login</a> | <a href=javascript:blink_verify()>verify</a> | <a href=javascript:blink_logout()>logout</a> | ';
-					//e.innerHTML+='<a href=javascript:blink_get_log()>get_log</a> | <a href=javascript:blink_get_homescreen()>get_homescreen</a> | <a href=javascript:blink_update()>update homescreen</a> | <a href=javascript:blink_update_cam()>update cam</a>';
-					e.innerHTML+='<button id="btn_update" class=btn onclick="blink_update_cam();this.blur()">update</button>';					
-				} else {e.innerHTML+='<br>I CAN\'T SEE CAMERAS HERE.'}
+			let h=homescreen?JSON.parse(homescreen):undefined;
+			if (h&&!h.account&&confirm('Do you want to log in?')) {blink_login(true)};
+			
+			let cinfo=document.getElementById('cam_info');
+			let cjpg=document.getElementById('cam_jpg');
+			let cam_info='';
+			
+			if (h&&h.cameras) {
+				let seed=Math.random();
+				let delay=0.3;
+				cjpg.style.transition = "all "+delay+"s";
+				cjpg.style.transform = "scale(0.3)";
+				////#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
+				setTimeout(()=>{cjpg.src='cam.jpg?'+seed;},delay*1000);
+				setTimeout(()=>{cjpg.style.transform = "scale(1)";},delay*1000);
+
+				cam_info=h.cameras[0].name+'<br>'+h.cameras[0].updated_at;
 			} else {
-				e.innerHTML+='<br>PLEASE <a href=javascript:blink_login(true)>LOG IN</a>.';
-				blink_login(true);
+				cjpg.src='cam_default.jpg';
 			}
+			cinfo.innerHTML=cam_info+'<br><button id="btn_update" class=btn onclick="blink_update_cam()">update</button>';					
+			//cinfo.innerHTML+='<br><br><button id="btn_display" class=btn onclick="blink_get_homescreen()">blink_get_homescreen</button>';					
+			//cjpg.onclick=()=>{window.open(cjpg.src,'_self');};
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -76,9 +86,12 @@
 		function blink_update_cam() {
 			get('api','{"command":"update_cam"}',(r)=>{
 				log(r);
+				
 				log('waiting for 5 seconds...');
 				let bu=document.getElementById('btn_update');
-				bu.className='wordB_disabled';
+				bu.blur();
+				bu.className='btn_disabled';
+				
 				setTimeout(()=>{bu.className='btn';blink_update();},5000)
 			});
 		}
@@ -117,7 +130,7 @@
 		body {border:0; padding:0%; margin:0; background-color:#fbfbfb; color: #000;}
 
 		.bigscreen {padding:0rem 1rem 1rem 1rem; margin:0;}
-		.screen {min-width:300px; max-width:420px; margin:auto;}
+		.screen {min-width:300px; max-width:420px; margin:auto; text-align:center;}
 
 		@media only screen and (max-width: 320px) {
 			.bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
@@ -131,66 +144,36 @@
 
 		@media print {
 			.screen {max-width:100%; margin:auto;}
-			.word, .label, #select_list {display:none}
 			body {background-color:#FFFFFF;}
-			.vlHeader {font-size: 1rem !important; margin:0 !important; border-bottom:0px solid #C0C0C0 !important;}
-			.vlA,.vlB,.vlAB {width:48% !important; font-size: 1rem !important; background-color:#FFFFFF !important; margin:0 !important;padding:0.2rem 0.2rem !important; border-top:1px solid #C0C0C0;}
-			.vlAh,.vlBh {width:48% !important; font-size: 1rem !important; background-color:#FFFF88 !important; margin:0 !important;padding:0.2rem 0.2rem !important; border-top:1px solid #C0C0C0;}
 		}
 
-		a {color:#000; text-decoration:none;}
+		#header {margin:1.2rem 0 0.8rem 0;}
+		#cam_image {display:inline-block; background-color:#f0f0f0; overflow:hidden;} /*1280*720*/
+		#cam_image img {display:block; width:100%; cursor:pointer;}
+		/*
+		#cam_image img {display:block; width:100%; transition:transform 0.2s; cursor:pointer;}
+		#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
+		*/
+
+		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
-		.afake {cursor:pointer; color:#000}
+		.afake {cursor:pointer; color:#000; text-decoration:underline;}
 		.afake:hover {color:#0078D4;}
-		.stats {display:flex; margin:1rem 0 0.4rem 0; cursor:pointer;}
-		.main {text-align:center;}
-		.results {font-size:1.2rem; text-align:center; margin:1.2rem 0 2rem 0;}
-		.dot {height:2.2rem; margin:0.5rem 1px 0 0; border-radius:0rem; background-color:#F0F0F0;}
-		.ok {background-color:#00DD00;}
-		.assist {background-color:#F0A000;}
-		.error {background-color:#DD0000;}
-		.first {margin-left:0; border-radius: 0.4rem 0 0 0.4rem;}
-		.last {margin-right:0; border-radius: 0 0.4rem 0.4rem 0;}
-
-		.word {transition:0.25s; font-size:1.4rem; outline-width: 0; padding:0.4rem 0.4rem; margin:0.4rem 0rem;}
 		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
-		.btn_mini_on {transition:0.2s; font-size:1rem; width:33%; border: 2px solid #505050;background-color:#505050;color:#FFF;cursor:pointer;}
-		.btn_mini_off {transition:0s; font-size:1rem; width:33%; border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#AAA;cursor:pointer;}
-		.btn_check {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer;}
-		.wordA {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#000; padding:0.8rem 0.4rem; margin:0.5rem 0rem 0.5rem 0; border-radius: 0}
-		.wordB {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
-		.wordB_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;}
-		.wordB_assist {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer;}
-		.wordB_ok {border: 2px solid #00DD00;background-color:#00DD00;color:#FFF;cursor:pointer;}
-		.wordB_error {border: 2px solid #DD0000;background-color:#DD0000;color:#FFF; text-decoration:line-through}
-		.scrambled {} /*{opacity:0.4;color:#000000;background-color:#000000;margin-right:2px}*/
-
-		.optionOK {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer; width:72%; float:right;}
-		.optionHELP {border: 2px solid #F0A000;background-color:#F0A000;color:#FFF;cursor:pointer; width:25%; float:left;}
+		.btn_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;}
 
 		.label {font-size:0.8rem;width:100%;text-align:left;border-bottom:0px solid #F0F0F0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0.1rem 0.2rem;}
 		select {font-size:1.3rem; padding:0.2rem 0.4rem; margin:0.2rem 0 0.2rem 0; background-color:#F0F0F0; color:#000;border: 2px solid #F0F0F0; outline-width: 0;}
-		textarea {font-size:0.8rem; padding:0.2rem 0.4rem; margin:0rem; background-color:#F0F0F0; color:#000;border: 2px solid #F0F0F0; outline-width: 0;}
-		.vl {margin-bottom:1.4rem; }
-		.vlHeader {font-size:0.8rem;width:100%;text-align:left;border-bottom:1px solid #F0F0F0;border-radius:0;margin:1rem 0 0.2rem 0;padding:0.1rem 0.2rem;}
-		.vlA {font-size:0.8rem;width:49%;float:left;background-color:#F0F0F0;text-align:right;border-radius:0;margin:2px 0;padding:0 0.2rem;}
-		.vlB {font-size:0.8rem;width:49%;float:right;background-color:#F0F0F0;text-align:left;border-radius:0;margin:2px 0;padding:0 0.2rem;}
-		.vlAh {font-size:0.8rem;width:49%;float:left;background-color:#FFFF88;text-align:right;border-radius:0;margin:2px 0;padding:0 0.2rem;}
-		.vlBh {font-size:0.8rem;width:49%;float:right;background-color:#FFFF88;text-align:left;border-radius:0;margin:2px 0;padding:0 0.2rem;}
-		.vlAB {font-size:0.8rem;width:100%;text-align:center;background-color:#FFFF88;border-radius:0;margin:2px 0;padding:0 0.2rem;}
 		.clear {clear:both;}
 
-		.star {background-repeat:no-repeat; background-position:center; background-size:contain; display:flex;}
-		.star1 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/></svg>');}
-		.star2 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 5.173l2.335 4.817 5.305.732-3.861 3.71.942 5.27-4.721-2.524v-12.005zm0-4.586l-3.668 7.568-8.332 1.151 6.064 5.828-1.48 8.279 7.416-3.967 7.416 3.966-1.48-8.279 6.064-5.827-8.332-1.15-3.668-7.569z"/></svg>');}
-		.star3 {background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 5.173l2.335 4.817 5.305.732-3.861 3.71.942 5.27-4.721-2.524-4.721 2.525.942-5.27-3.861-3.71 5.305-.733 2.335-4.817zm0-4.586l-3.668 7.568-8.332 1.151 6.064 5.828-1.48 8.279 7.416-3.967 7.416 3.966-1.48-8.279 6.064-5.827-8.332-1.15-3.668-7.569z"/></svg>');}
 	</style>
 </head>
 <body onload='go()'>
 	<div id=bigscreen class=bigscreen>
 		<div id=screen class=screen>
-			<div id=stats class=stats></div>
-			<div id=main class=main>HELLO.</div>
+			<div id=header>HELLO. THIS IS BLINK.</div>
+			<div id=cam_image><img id=cam_jpg></div>
+			<div id=cam_info class=cam_info></div>
 		</div>
 	</div>
 </body>
