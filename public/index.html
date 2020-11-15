@@ -12,36 +12,33 @@
 
 		function go() {
 			document.getElementById('cam_jpg').onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			document.getElementById('cam_image').style.height=document.getElementById('cam_image').clientWidth*0.5625+'px';
 			blink_get_homescreen();
 		}
 
 		function display(homescreen) {
 			let h=homescreen?JSON.parse(homescreen):undefined;
-			if (h&&!h.account&&confirm('Do you want to log in?')) {blink_login(true)};
-			
 			let cjpg=document.getElementById('cam_jpg');
 			let cname=document.getElementById('cam_name');
 			let cdate=document.getElementById('cam_date');
-			let cam_info='';
 			
 			if (h&&h.cameras) {
-				let seed=Math.random();
 				let delay=0.2;
 				cjpg.style.transition="all "+delay+"s";
 				cjpg.style.transform="scale(0.3)";
 				////#cam_image:hover img {transform:scale(1.1);transform-origin:50%;}
-				setTimeout(()=>{cjpg.src='cam.jpg?'+seed;},delay*1000);
+				setTimeout(()=>{cjpg.src='cam.jpg?'+h.cameras[0].updated_at;},delay*1000);
 				setTimeout(()=>{cjpg.style.transform = "scale(1)";},delay*1000);
-				cname.innerHTML=h.cameras[0].name;
-				cdate.innerHTML=h.cameras[0].updated_at;
+				cname.innerHTML=h.cameras[0].name+' | '+Math.round((h.cameras[0].signals.temp-32)*5/9)+'°C';
+				cdate.innerHTML=new Date(h.cameras[0].updated_at).toLocaleString();
+				document.getElementById('btn_update').className='btn';
 			} else {
-				cjpg.src='cam_default.jpg';
+				//cjpg.src='cam_default.jpg';
 				cname.innerHTML='';
 				cdate.innerHTML='';
 			}
-			//cname.innerHTML=cam_info+'<br><button id="btn_update" class=btn onclick="blink_update_cam()">update</button>';					
-			//cinfo.innerHTML+='<br><br><button id="btn_display" class=btn onclick="blink_get_homescreen()">blink_get_homescreen</button>';					
-			//cjpg.onclick=()=>{window.open(cjpg.src,'_self');};
+
+			if (h&&!h.account&&confirm('Do you want to log in?')) {blink_login(true)};
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -85,20 +82,18 @@
 			};
 		}
 		function blink_update_cam() {
+			let bu=document.getElementById('btn_update');
+			bu.blur();
+			bu.className='btn_disabled';				
 			get('api','{"command":"update_cam"}',(r)=>{
 				log(r);
-				
 				log('waiting for 5 seconds...');
+				setTimeout(()=>{blink_update();},5000)
 				document.getElementById('cam_jpg').style.transform="scale(0.9)";
-				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.8)";},1000)
-				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.7)";},2000)
-				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.6)";},3000)
-				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.5)";},4000)
-				
-				let bu=document.getElementById('btn_update');
-				bu.blur();
-				bu.className='btn_disabled';
-				setTimeout(()=>{bu.className='btn';blink_update();},5000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.85)";},1000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.8)";},2000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.75)";},3000)
+				setTimeout(()=>{document.getElementById('cam_jpg').style.transform="scale(0.7)";},4000)
 			});
 		}
 		function blink_update() {
@@ -160,8 +155,8 @@
 
 		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
-		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;margin:0.2rem 0 0.2rem 0;}
-		.btn_disabled {border: 2px solid #F0F0F0;background-color:#F0F0F0;color:#E0E0E0;margin:0.2rem 0 0.2rem 0;}
+		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;padding:0.2rem 0rem;margin:0.2rem 0 0.2rem 0;}
+		.btn_disabled {border: 2px solid #E0E0E0;background-color:#E0E0E0;color:#A0A0A0;padding:0.2rem 0rem;margin:0.2rem 0 0.2rem 0;}
 
 		/*
 		.afake {cursor:pointer; color:#000; text-decoration:underline;}
@@ -179,10 +174,10 @@
 	<div id=bigscreen class=bigscreen>
 		<div id=screen class=screen>
 			<div id=header>HELLO. THIS IS BLINK.</div>
-			<div id=cam_image><img id=cam_jpg src=cam_default.jpg></div>
+			<div id=cam_image><img id=cam_jpg></div>
 			<div id=cam_name class=cam_info></div>
 			<div id=cam_date class=cam_info></div>
-			<button id="btn_update" class=btn onclick="blink_update_cam()">update</button>
+			<button id=btn_update class=btn_disabled onclick=blink_update_cam()>update</button>
 		</div>
 	</div>
 </body>
