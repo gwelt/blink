@@ -32,7 +32,7 @@
 			let videothumbnails=document.getElementById('cam_videothumbnails');
 			videothumbnails.innerHTML='';
 			if (v&&v.media) {
-				v.media.forEach((e)=>{videothumbnails.innerHTML+='<div class=videothumbnail_container><img class=videothumbnail src=/media/thumbnail/'+e.id+' onclick=display(global_homescreen_and_videoevents,'+e.id+')></div>'});
+				v.media.forEach((e)=>{videothumbnails.innerHTML+='<div class=videothumbnail_container><img class=videothumbnail src=media/thumbnail/'+e.id+' onclick=display(global_homescreen_and_videoevents,'+e.id+')></div>'});
 			}
 
 			// if video_id then display this video
@@ -173,7 +173,7 @@
 		#cam_image img {display:block; width:100%; cursor:pointer;}
 		#cam_jpg {transition:0.2s}
 		/*#cam_jpg:hover {transform:scale(1.05)}*/
-		#cam_video {display:'none'}
+		#cam_video {display:none}
 		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0rem 0.2rem;}
 		#cam_videothumbnails {display:flex;font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:1rem 0 0.2rem 0;padding:0rem 0.2rem;}
 		.videothumbnail_container {padding:0.5rem;border-radius:0;overflow:hidden;}
