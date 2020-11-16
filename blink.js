@@ -113,9 +113,18 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
     	let d=new Date();
     	d.setDate(d.getDate()-1);
     	//d.toISOString().slice(0,-5);
-		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since='+d.toISOString().slice(0,-5)+'%2B0000&page=1'),'',false,(r)=>{
+		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since='+d.toISOString().slice(0,-5)+'+0000&page=1'),'',false,(r)=>{
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined}; 
-			if (!this.is_errormessage(rj)) {
+			if (rj&&!this.is_errormessage(rj)) {
+
+				// filter and sort media in video-events
+				rj.media=rj.media.filter(e => e.source!='snapshot').sort((a, b)=>{
+				  var keyA = new Date(a.created_at), keyB = new Date(b.created_at);
+				  if (keyA < keyB) return 1;
+				  if (keyA > keyB) return -1;
+				  return 0;
+				}).slice(0,3);
+
 				this.videoevents=rj;
 		     	this.write_log('>OK GET_VIDEO_EVENTS');
 			} else {this.videoevents={}}

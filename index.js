@@ -20,7 +20,7 @@ app.use('(/blink)?/media/thumbnail/:media_id?', function(req,res) {
 		if (r) {
 			res.set('Content-Type','image/jpeg');
 			res.end(r,'binary');
-		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE CAM.JPG HERE.')}
+		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE A THUMBNAIL HERE.')}
 	});
 });
 app.use('(/blink)?/media/:media_id?', function(req,res) {
@@ -63,7 +63,13 @@ app.use('(/blink)?/:file?', function(req,res) {
 
 				case 'update':
 					blink.UPDATE((r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
+						blink.GET_VIDEO_EVENTS((r)=>{
+							res.set('Content-Type','application/json');
+							let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
+							let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
+							let hv='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
+							res.end(hv);
+						});
 					});
 					break;
 
@@ -73,15 +79,12 @@ app.use('(/blink)?/:file?', function(req,res) {
 					});
 					break;
 
-				case 'get_video_events':
-					blink.GET_VIDEO_EVENTS((r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
-					});
-					break;
-
-				case 'get_homescreen':
+				case 'get_homescreen_and_videoevents':
 					res.set('Content-Type','application/json');
-					res.end(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
+					let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
+					let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
+					let r='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
+					res.end(r);
 					break;
 
 				case 'get_log':
@@ -149,15 +152,20 @@ function blink_init() {
 					console.log('[TESTING-MODE] resuming with authtoken from config.json '+blink.authtoken);
 					blink.write_log('>OK RESUMING '+blink.email+' | ACCOUNT_ID '+blink.account_id+' | CLIENT_ID '+blink.client_id+' | AUTHTOKEN '+blink.authtoken+' | REGION_TIER '+blink.region_tier);
 					blink.UPDATE(()=>{});
+					blink.GET_VIDEO_EVENTS(()=>{});
 				} else {blink.LOGIN((r)=>{
 					console.log('Ok. http://localhost:'+port+' is now linked to your Blink-account.');
 					blink.UPDATE(()=>{});
+					blink.GET_VIDEO_EVENTS(()=>{});
 					// if verification is required, prompt for PIN (will automatically be sent from Blink by email)
 					if (r&&r.client&&r.client.verification_required&&r.client.id) {
 						console.log('Sorry. Blink requests verification. Please check you email for the required PIN.')
 						prompt('> PIN       : ',undefined,false,(pin)=>{
-							blink.VERIFY(pin,(r)=>{console.log('Ok. Thanks for verifying.')});
-							blink.UPDATE(()=>{});
+							blink.VERIFY(pin,(r)=>{
+								console.log('Ok. Thanks for verifying.')
+								blink.UPDATE(()=>{});
+								blink.GET_VIDEO_EVENTS(()=>{});
+							});
 						});
 					};
 				})}
