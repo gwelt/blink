@@ -25,7 +25,7 @@ Blink.prototype.LOGIN = function (callback) {
 	if (this.email&&this.password) {
 	    let data = {"email":this.email,"password":this.password,"unique_id":this.unique_id};
 		this.request(this.get_blinkRequestOptions('/api/v4/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
-			let rj=JSON.parse(r); 
+			let rj=undefined; try {rj=JSON.parse(r)} catch(){}; 
 			if (!this.is_errormessage(rj)) {
 				this.account_id=rj.account?rj.account.id:undefined;
 				this.client_id=rj.client?rj.client.id:undefined;
@@ -67,7 +67,7 @@ Blink.prototype.UPDATE = function (callback) {
     this.write_log('... UPDATE');
     if (this.account_id) {    	
 		this.request(this.get_blinkRequestOptions('/api/v3/accounts/'+this.account_id+'/homescreen'),'',false,(r)=>{
-			let rj=JSON.parse(r); 
+			let rj=undefined; try {rj=JSON.parse(r)} catch(){}; 
 			if (!this.is_errormessage(rj)) {
 				this.homescreen=rj;
 		     	this.write_log('>OK UPDATE');
@@ -114,7 +114,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
     	d.setDate(d.getDate()-1);
     	//d.toISOString().slice(0,-5);
 		this.request(this.get_blinkRequestOptions('/api/v1/accounts/'+this.account_id+'/media/changed?since='+d.toISOString().slice(0,-5)+'%2B0000&page=1'),'',false,(r)=>{
-			let rj=JSON.parse(r); 
+			let rj=undefined; try {rj=JSON.parse(r)} catch(){}; 
 			if (!this.is_errormessage(rj)) {
 				this.videoevents=rj;
 		     	this.write_log('>OK GET_VIDEO_EVENTS');
@@ -147,7 +147,7 @@ Blink.prototype.GET_MEDIA_THUMBNAIL = function (t,callback) {
 }
 
 Blink.prototype.is_errormessage = function (o) {
-	if (o.message) {
+	if (o&&o.message) {
 		this.write_log('>ERROR '+o.message+' (CODE:'+o.code+')');
 		return true;
 	} else {return false;}
