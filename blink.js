@@ -118,7 +118,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 			if (rj&&!this.is_errormessage(rj)) {
 
 				// filter and sort media in video-events
-				rj.media=rj.media.filter(e => e.source!='snapshot').sort((a, b)=>{
+				rj.media=rj.media.filter(e => e.source!='snapshot' && !e.deleted).sort((a, b)=>{
 				  var keyA = new Date(a.created_at), keyB = new Date(b.created_at);
 				  if (keyA < keyB) return 1;
 				  if (keyA > keyB) return -1;
