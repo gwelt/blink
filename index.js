@@ -14,7 +14,73 @@ process.on('SIGTERM', function(){ if (config.SIGTERM==undefined) {config.SIGTERM
 app.use(bodyParser.json({ strict: true }));
 app.use(function (error, req, res, next){next()}); // don't show error-message, if it's not JSON ... just ignore it
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use('(/blink)?/', express.static(__dirname + '/public'));
+
+app.use('(/blink)?/api', function(req,res) {
+	//res.header("Access-Control-Allow-Origin", "*");
+	//res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	//console.log('>>> '+req.params.file+' > '+JSON.stringify(req.body));
+	switch (req.body.command) {
+
+		case 'login':
+			if (req.body.email) {blink.email=req.body.email};
+			if (req.body.password) {blink.password=req.body.password};
+			blink.LOGIN((r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
+		case 'verify':
+			blink.VERIFY(req.body.pin,(r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
+		case 'logout':
+			blink.LOGOUT((r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
+		case 'update':
+			blink.UPDATE((r)=>{
+				blink.GET_VIDEO_EVENTS((r)=>{
+					res.set('Content-Type','application/json');
+					let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
+					let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
+					let hv='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
+					res.end(hv);
+				});
+			});
+			break;
+
+		case 'update_cam':
+			blink.UPDATE_CAM(undefined,undefined,(r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
+		case 'get_homescreen_and_videoevents':
+			res.set('Content-Type','application/json');
+			let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
+			let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
+			let r='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
+			res.end(r);
+			break;
+
+		case 'get_log':
+			res.set('Content-Type','text/plain');
+			res.end(blink.log.read());
+			break;
+
+		default:
+			res.end('{"error":"unknown api-call"}');
+			break;
+
+	}
+});
+
 app.use('(/blink)?/media/thumbnail/:media_id?', function(req,res) {
 	blink.GET_MEDIA_THUMBNAIL(req.params.media_id||undefined,(r)=>{
 		if (r) {
@@ -23,6 +89,7 @@ app.use('(/blink)?/media/thumbnail/:media_id?', function(req,res) {
 		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE A THUMBNAIL HERE.')}
 	});
 });
+
 app.use('(/blink)?/media/:media_id?', function(req,res) {
 	blink.GET_MEDIA(req.params.media_id||undefined,(r)=>{
 		if (r) {
@@ -31,73 +98,9 @@ app.use('(/blink)?/media/:media_id?', function(req,res) {
 		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE MEDIA.MP4 HERE.')}
 	});
 });
+
 app.use('(/blink)?/:file?', function(req,res) {
-	//res.header("Access-Control-Allow-Origin", "*");
-	//res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-	//console.log('>>> '+req.params.file+' > '+JSON.stringify(req.body));
-
 	switch (req.params.file) {
-
-		case 'api':
-			switch (req.body.command) {
-
-				case 'login':
-					if (req.body.email) {blink.email=req.body.email};
-					if (req.body.password) {blink.password=req.body.password};
-					blink.LOGIN((r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
-					});
-					break;
-
-				case 'verify':
-					blink.VERIFY(req.body.pin,(r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
-					});
-					break;
-
-				case 'logout':
-					blink.LOGOUT((r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
-					});
-					break;
-
-				case 'update':
-					blink.UPDATE((r)=>{
-						blink.GET_VIDEO_EVENTS((r)=>{
-							res.set('Content-Type','application/json');
-							let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
-							let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
-							let hv='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
-							res.end(hv);
-						});
-					});
-					break;
-
-				case 'update_cam':
-					blink.UPDATE_CAM(undefined,undefined,(r)=>{
-						res.set('Content-Type','application/json'); res.end(r);
-					});
-					break;
-
-				case 'get_homescreen_and_videoevents':
-					res.set('Content-Type','application/json');
-					let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
-					let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
-					let r='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
-					res.end(r);
-					break;
-
-				case 'get_log':
-					res.set('Content-Type','text/plain');
-					res.end(blink.log.read());
-					break;
-
-				default:
-					res.end('{"error":"unknown api-call"}');
-					break;
-
-			}
-			break;
 
 		case 'cam.jpg':
 			blink.GET_IMAGE(undefined,(r)=>{
@@ -117,16 +120,6 @@ app.use('(/blink)?/:file?', function(req,res) {
 			});
 			break;
 
-		// for testing
-		case 'delete_credentials':
-			blink.email=undefined;
-			blink.password=undefined;
-			res.end();
-			break;
-		// for testing
-		case 'delete_authtoken':
-			blink.authtoken=undefined;
-			
 		//case undefined:
 		//	res.sendFile('index.html',{root:path.join(__dirname,'public')});
 		//	break;
@@ -136,7 +129,6 @@ app.use('(/blink)?/:file?', function(req,res) {
 			break;
 
 	}
-
 });
 
 function blink_init() {
