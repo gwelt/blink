@@ -14,8 +14,8 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.region_tier=region_tier;
 	
 	this.homescreen={};
-	this.thumbnails=new ThumbnailCache();
 	this.videoevents={};
+	this.cache=new Cache(10);
 	this.log=new Logger();
 	return this;
 }
@@ -81,14 +81,14 @@ Blink.prototype.GET_IMAGE = function (cam,callback) {
     this.write_log('... GET_IMAGE');
 	let image=((this.homescreen.cameras)?this.homescreen.cameras[0].thumbnail+'.jpg':undefined);
 	if (image) {
-		let cached=this.thumbnails.read(image);
+		let cached=this.cache.get(image);
 		if (cached) {
 		    this.write_log('>OK GET_IMAGE [FROM CACHE] '+image);
-			callback(cached)
+			callback(cached);
 		} else {
 		    this.request(this.get_blinkRequestOptions(image),'',true,(r)=>{
 		    	this.write_log('>OK GET_IMAGE '+image);
-		    	this.thumbnails.add(new Thumbnail(image,r));
+		    	this.cache.add(new Cacheitem(image,r));
 		    	callback(r);
 		    });	
 		}
@@ -126,7 +126,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 				}).slice(0,3);
 
 				this.videoevents=rj;
-		     	this.write_log('>OK GET_VIDEO_EVENTS');
+				this.write_log('>OK GET_VIDEO_EVENTS');
 			} else {this.videoevents={}}
 			callback(r);
 		});
@@ -137,10 +137,17 @@ Blink.prototype.GET_MEDIA = function (m,callback) {
     this.write_log('... GET_MEDIA');
 	let media=(m?'/api/v2/accounts/'+this.account_id+'/media/clip/'+m+'.mp4':undefined)||((this.videoevents.media)?this.videoevents.media[0].media:undefined);
 	if (media) {
-	    this.request(this.get_blinkRequestOptions(media),'',true,(r)=>{
-	    	this.write_log('>OK GET_MEDIA '+media);
-	    	callback(r);
-	    });	
+		let cached=this.cache.get(media);
+		if (cached) {
+		    this.write_log('>OK GET_MEDIA [FROM CACHE] '+media);
+			callback(cached);
+		} else {
+		    this.request(this.get_blinkRequestOptions(media),'',true,(r)=>{
+		    	this.write_log('>OK GET_MEDIA '+media);
+		    	this.cache.add(new Cacheitem(media,r));
+		    	callback(r);
+		    });
+		}	
 	} else {this.write_log('>ERROR MEDIA NOT AVAILABLE.'); callback('{"error":"MEDIA NOT AVAILABLE."}');}
 }
 
@@ -148,10 +155,18 @@ Blink.prototype.GET_MEDIA_THUMBNAIL = function (t,callback) {
     this.write_log('... GET_MEDIA_THUMBNAIL');
 	let thumbnail=(t?'/api/v2/accounts/'+this.account_id+'/media/thumb/'+t:undefined)||((this.videoevents.media)?this.videoevents.media[0].thumbnail:undefined);
 	if (thumbnail) {
-	    this.request(this.get_blinkRequestOptions(thumbnail),'',true,(r)=>{
-	    	this.write_log('>OK GET_MEDIA_THUMBNAIL '+thumbnail);
-	    	callback(r);
-	    });	
+		let cached=this.cache.get(thumbnail);
+		if (cached) {
+		    this.write_log('>OK GET_MEDIA_THUMBNAIL [FROM CACHE] '+thumbnail);
+			callback(cached);
+		} else {
+		    this.request(this.get_blinkRequestOptions(thumbnail),'',true,(r)=>{
+		    	this.write_log('>OK GET_MEDIA_THUMBNAIL '+thumbnail);
+		    	this.cache.add(new Cacheitem(thumbnail,r));
+		    	callback(r);
+		    });	
+		}
+
 	} else {this.write_log('>ERROR MEDIA_THUMBNAIL NOT AVAILABLE.'); callback('{"error":"MEDIA_THUMBNAIL NOT AVAILABLE."}');}
 }
 
@@ -193,10 +208,10 @@ Blink.prototype.request = function (options,data,is_binary,callback) {
 	req.end();
 }
 
-function Thumbnail(name,data) {this.name=name;this.data=data;}
-function ThumbnailCache(max_thumbs_to_cache) {this.max_thumbs_to_cache=max_thumbs_to_cache||1; this.thumbnails=[];}
-ThumbnailCache.prototype.add = function (thumbnail) {this.thumbnails.push(thumbnail); while (this.thumbnails.length>this.max_thumbs_to_cache) {this.thumbnails.splice(0,1)};}
-ThumbnailCache.prototype.read = function (name) {return (this.thumbnails[0]&&(this.thumbnails[0].name==name))?this.thumbnails[0].data:false;} // TODO: search for name
+function Cache(max_items) {this.items=[];this.max_items=max_items||1;}
+function Cacheitem(id,data) {this.id=id;this.data=data;}
+Cache.prototype.add = function (cacheitem) {this.items.push(cacheitem); while (this.items.length>this.max_items) {this.items.splice(0,1)};}
+Cache.prototype.get = function (id) {let f=this.items.find(i => i.id==id); return f?f.data:undefined}
 
 function Logger(maxlength) {this.maxlength=(maxlength||25); this.list=[];}
 Logger.prototype.add = function (s) {this.list.push(s); while (this.list.length>this.maxlength) {this.list.splice(0,1)};}
