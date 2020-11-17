@@ -41,7 +41,7 @@
 			// VIDEO
 			// hack for taking video_id from media-array, if given video_id is within reasonable range (0, 1 or 2 for example)
 			// real video_id's usually have larger values
-			if (v&&v.media[video_id]) {video_id=v.media[video_id].id};
+			if (v&&v.media&&video_id&&v.media[video_id]) {video_id=v.media[video_id].id};
 			// if video_id then display this video
 			// filter for this video_id ...
 			let video=v.media?v.media.filter(v => v.id==video_id)[0]:undefined;
