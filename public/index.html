@@ -11,9 +11,13 @@
 	<script>
 
 		function go() {
+			on_resize();
+			blink_get_status();
+		}
+
+		function on_resize() {
 			document.getElementById('cam_image').style.height=document.getElementById('cam_image').clientWidth*0.5625+'px';
 			document.getElementById('vt0d').style.minHeight=document.getElementById('vt0d').clientWidth*0.5625+'px';
-			blink_get_status();
 		}
 
 		let global_homescreen_and_videoevents=undefined;
@@ -26,20 +30,7 @@
 			let cvideo=document.getElementById('cam_video');
 			let cname=document.getElementById('cam_name');
 			let cdate=document.getElementById('cam_date');
-			cname.innerHTML='&nbsp;';
-			cdate.innerHTML='&nbsp;';
-			
-			document.getElementById('cam_jpg').onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};			
-			// set video-thumbnails
-			if (v&&v.media) {
-				let i=0; while ((i<3)&&(v.media[i])) {
-					document.getElementById('vt'+i+'i').src='media/thumbnail/'+v.media[i].id;
-					document.getElementById('vt'+i+'i').style.display='block';
-					document.getElementById('vt'+i+'c').innerHTML=new Date(v.media[i].created_at).toLocaleTimeString();
-					document.getElementById('vt'+i+'o').style.display='block';
-					i++;
-				}
-			}
+			let bu=document.getElementById('btn_update');
 			
 			// VIDEO
 			// hack for taking video_id from media-array, if given video_id is within reasonable range (0, 1 or 2 for example)
@@ -65,17 +56,29 @@
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
 					cjpg.src='cam.jpg?'+h.cameras[0].updated_at;
+					document.getElementById('cam_jpg').onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};			
 					cname.innerHTML=h.cameras[0].name+' | '+Math.round((h.cameras[0].signals.temp-32)*5/9)+'°C';
 					cdate.innerHTML=new Date(h.cameras[0].updated_at).toLocaleString();
 				}
 			}
-			
+
+			// UPDATE-BUTTON
 			if (h&&h.cameras) {
-				let bu=document.getElementById('btn_update');
 				bu.className='btn';
 				bu.onclick=()=>{blink_update_cam()};
 			}
 
+			// VIDEO-THUMBNAILS
+			if (v&&v.media) {
+				let i=0; while ((i<3)&&(v.media[i])) {
+					document.getElementById('vt'+i+'i').src='media/thumbnail/'+v.media[i].id;
+					document.getElementById('vt'+i+'i').style.display='block';
+					document.getElementById('vt'+i+'c').innerHTML=new Date(v.media[i].created_at).toLocaleTimeString();
+					document.getElementById('vt'+i+'o').style.display='block';
+					i++;
+				}
+			}
+			
 			setTimeout(()=>{
 				if (((!h||h&&!h.account))&&confirm('Do you want to log in?')) {blink_login(true)};
 			},500);
@@ -154,7 +157,6 @@
 			req.send(reqobj);
 		}
 		function stopwatch(time) {if (typeof time != 'undefined') {return new Date()-time} else {return new Date()}}
-		function IsJsonString(str) {let json=undefined; try {json=JSON.parse(str)} catch (e) {return false}; return json[0]?true:false}
 
 		function log(l) {console.log(l)};
 
@@ -205,7 +207,7 @@
 
 	</style>
 </head>
-<body onload='go()'>
+<body onload='go()' onresize='on_resize()'>
 	<div id=bigscreen class=bigscreen>
 		<div id=screen class=screen>
 			<div id=header></div>

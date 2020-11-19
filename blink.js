@@ -74,16 +74,18 @@ Blink.prototype.GET_STATUS = function (callback,force_update,force_cache) {
 		callback(r);    	
     } else {
 	    // else update
-		if (this.account_id) {    	
-			this.GET_HOMESCREEN(()=>{
-				this.GET_VIDEO_EVENTS(()=>{
-					this.lastupdate=stopwatch();
-					this.write_log('>OK UPDATED STATUS (HOMESCREEN AND VIDEOEVENTS)');
-					this.GET_STATUS((r)=>{
-						callback(r);
-					},false,true);
-				});
+		if (this.account_id) {   
+
+			let homescreen = new Promise((resolve)=>{this.GET_HOMESCREEN((r)=>{resolve(r)})});
+			let videoevents = new Promise((resolve)=>{this.GET_VIDEO_EVENTS((r)=>{resolve(r)})});
+			Promise.all([homescreen,videoevents]).then((values_of_all_promises_array)=>{
+				this.lastupdate=stopwatch();
+				this.write_log('>OK UPDATED STATUS (HOMESCREEN AND VIDEOEVENTS)');
+				this.GET_STATUS((r)=>{
+					callback(r);
+				},false,true);
 			});
+
 		} else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}	
     }
 }
