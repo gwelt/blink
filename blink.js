@@ -62,15 +62,15 @@ Blink.prototype.LOGOUT = function (callback) {
 	} else {this.write_log('>ERROR ACCOUNT_ID AND CLIENT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID AND CLIENT_ID REQUIRED."}');}
 }
 
-Blink.prototype.UPDATE = function (callback,force_update,force_cache) {
+Blink.prototype.GET_STATUS = function (callback,force_update,force_cache) {
     function stopwatch(startdate) {if (typeof startdate != 'undefined') {return new Date()-startdate} else {return new Date()}}
     // if no update is needed, return cached values
     let cache_age=stopwatch(this.lastupdate)/1000;
-    if ( force_cache || (cache_age<=(this.accepted_age_of_data_in_seconds||3600)&&!force_update) ) {
+    if ( force_cache || (cache_age<(this.accepted_age_of_data_in_seconds||cache_age)&&!force_update) ) {
 		let homescreen_JSON=(this.homescreen?JSON.stringify(this.homescreen):'{}');
 		let videoevents_JSON=(this.videoevents?JSON.stringify(this.videoevents):'{}');
 		let r='{"lastupdate":"'+this.lastupdate+'","homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
-		this.write_log('>OK UPDATE [FROM CACHE] VALID FOR '+((this.accepted_age_of_data_in_seconds||0)-cache_age).toFixed(0)+' SECONDS');
+		this.write_log('>OK GET_STATUS [FROM CACHE] VALID FOR '+((this.accepted_age_of_data_in_seconds||cache_age)-cache_age).toFixed(0)+' SECONDS');
 		callback(r);    	
     } else {
 	    // else update
@@ -78,8 +78,8 @@ Blink.prototype.UPDATE = function (callback,force_update,force_cache) {
 			this.GET_HOMESCREEN(()=>{
 				this.GET_VIDEO_EVENTS(()=>{
 					this.lastupdate=stopwatch();
-					this.write_log('>OK UPDATED HOMESCREEN AND VIDEOEVENTS');
-					this.UPDATE((r)=>{
+					this.write_log('>OK UPDATED STATUS (HOMESCREEN AND VIDEOEVENTS)');
+					this.GET_STATUS((r)=>{
 						callback(r);
 					},false,true);
 				});
