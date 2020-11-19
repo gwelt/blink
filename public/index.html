@@ -75,7 +75,7 @@
 			}
 
 			setTimeout(()=>{
-				if (((h&&!h.account))&&confirm('Do you want to log in?')) {blink_login(true)};
+				if (((!h||h&&!h.account))&&confirm('Do you want to log in?')) {blink_login(true)};
 			},500);
 		}
 
