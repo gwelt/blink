@@ -16,7 +16,9 @@
 			blink_get_status();
 		}
 
+		let global_homescreen_and_videoevents=undefined;
 		function display(homescreen_and_videoevents,video_id) {
+			global_homescreen_and_videoevents=homescreen_and_videoevents;
 			let hv=homescreen_and_videoevents?JSON.parse(homescreen_and_videoevents):undefined;
 			let h=hv?hv.homescreen:undefined;
 			let v=hv?hv.videoevents:undefined;
