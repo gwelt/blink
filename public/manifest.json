@@ -6,6 +6,6 @@
 	],
 	"start_url":"/blink",
 	"background_color":"#FBFBFB",
-	"theme_color":"#FBFBFB",
+	"theme_color":"#0d5800",
 	"display":"standalone"
 }

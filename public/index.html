@@ -5,7 +5,7 @@
 	<link rel="icon" type="image/png" href="blink180.png">
 	<link rel="apple-touch-icon" sizes="180x180" href="blink180.png">
 	<link rel="manifest" href="manifest.json">
-	<meta name="theme-color" content="#fbfbfb">
+	<meta name="theme-color" content="#0d5800">
 	<meta name="Description" content="Blink">
 	<title>BLINK</title>
 	<script>
@@ -18,6 +18,12 @@
 		function on_resize() {
 			document.getElementById('cam_image').style.height=document.getElementById('cam_image').clientWidth*0.5625+'px';
 			document.getElementById('vt0d').style.minHeight=document.getElementById('vt0d').clientWidth*0.5625+'px';
+			document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image').clientWidth*1.4+'px';
+			document.getElementById('footer_image').style.width=document.getElementById('cam_image').clientWidth*1.4+'px';
+			document.getElementById('footer_image').style.left=(document.getElementById('bigscreen').clientWidth/2)-(document.getElementById('cam_image').clientWidth*1.4/2)+'px';
+			document.getElementById('footer_image').style.bottom='-'+document.getElementById('footer_image').clientHeight/4+'px';
+			document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight/2+'px';
+			//document.getElementById('bigscreen').style.backgroundColor='#c0ffc0';
 		}
 
 		let global_homescreen_and_videoevents=undefined;
@@ -164,10 +170,12 @@
 	<style>
 		* {box-sizing: border-box;}
 		html, body, section, div, input, textarea, select, button {border-radius: 0.3rem;font-family: Verdana, Geneva, sans-serif; font-size: 1.3rem; width:100%; overflow-wrap:break-word;}
+		html, body {height:100%;}
 		body {border:0; padding:0%; margin:0; background-color:#fbfbfb; color: #000;}
 
-		.bigscreen {padding:0rem 1rem 1rem 1rem; margin:0;}
+		.bigscreen {height:100%;padding:0rem 1rem 1rem 1rem; border-radius:0; margin:0; background-repeat:no-repeat;background-size:0%;background-position:center top;background-image:url('bghead.svg') }
 		.screen {min-width:300px; max-width:420px; margin:auto; text-align:center;}
+		#footer_image {position:fixed; bottom:0; z-index:1;}
 
 		@media only screen and (max-width: 320px) {
 			.bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
@@ -184,7 +192,7 @@
 			body {background-color:#FFFFFF;}
 		}
 
-		#header {margin:1.4rem 0 1rem 0;}
+		#header {padding:0.5rem 0 1rem 0;}
 		#cam_image {display:inline-block; background-color:#f0f0f0; overflow:hidden;} /*1280*720*/
 		#cam_image img {display:block; width:100%; cursor:pointer;}
 		#cam_jpg {transition:0.2s}
@@ -226,7 +234,9 @@
 					<div class=videothumbnail><img id=vt2i class=videothumbnail_image></div><div id=vt2c class=videothumbnail_caption></div><div id=vt2o onclick=display(global_homescreen_and_videoevents,2); class=videothumbnail_overlay></div>
 				</div>
 			</div>
+			<div id=image_footer_height_space>&nbsp;</div>
 		</div>
+		<img id=footer_image src=gras.svg>
 	</div>
 </body>
 </html>
