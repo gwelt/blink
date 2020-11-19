@@ -1,6 +1,7 @@
 {
   "port": 3000,
   "headless_mode": false,
+  "accepted_age_of_data_in_seconds": 60,
 
   "email": "",
   "password": "",

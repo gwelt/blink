@@ -6,7 +6,7 @@ var path = require('path');
 var config = {}; try {config=require('./config.json')} catch(err){};
 var port = process.env.PORT || config.port || 3000;
 const Blink = require('./blink.js');
-var blink = new Blink(config.email,config.password,config.unique_id,config.account_id,config.client_id,config.authtoken,config.region_tier);
+var blink = new Blink(config.email,config.password,config.unique_id,config.account_id,config.client_id,config.authtoken,config.region_tier,config.accepted_age_of_data_in_seconds);
 server.listen(port, function () { console.log('\x1b[44m SERVER LISTENING ON PORT '+port+' \x1b[0m'); blink_init(); });
 process.on('SIGINT', function(){ if (config.SIGINT==undefined) {config.SIGINT=true; console.log('SIGINT'); process.exit(0);} });
 process.on('SIGTERM', function(){ if (config.SIGTERM==undefined) {config.SIGTERM=true; console.log('SIGTERM'); process.exit(0);} });
@@ -45,28 +45,14 @@ app.use('(/blink)?/api', function(req,res) {
 
 		case 'update':
 			blink.UPDATE((r)=>{
-				blink.GET_VIDEO_EVENTS((r)=>{
-					res.set('Content-Type','application/json');
-					let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
-					let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
-					let hv='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
-					res.end(hv);
-				});
-			});
+				res.set('Content-Type','application/json'); res.end(r);
+			},req.body.force);
 			break;
 
 		case 'update_cam':
 			blink.UPDATE_CAM(undefined,undefined,(r)=>{
 				res.set('Content-Type','application/json'); res.end(r);
 			});
-			break;
-
-		case 'get_homescreen_and_videoevents':
-			res.set('Content-Type','application/json');
-			let homescreen_JSON=(blink.homescreen?JSON.stringify(blink.homescreen):'{}');
-			let videoevents_JSON=(blink.videoevents?JSON.stringify(blink.videoevents):'{}');
-			let r='{"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
-			res.end(r);
 			break;
 
 		case 'get_log':
@@ -144,11 +130,9 @@ function blink_init() {
 					console.log('[TESTING-MODE] resuming with authtoken from config.json '+blink.authtoken);
 					blink.write_log('>OK RESUMING '+blink.email+' | ACCOUNT_ID '+blink.account_id+' | CLIENT_ID '+blink.client_id+' | AUTHTOKEN '+blink.authtoken+' | REGION_TIER '+blink.region_tier);
 					blink.UPDATE(()=>{});
-					blink.GET_VIDEO_EVENTS(()=>{});
 				} else {blink.LOGIN((r)=>{
 					console.log('Ok. http://localhost:'+port+' is now linked to your Blink-account.');
 					blink.UPDATE(()=>{});
-					blink.GET_VIDEO_EVENTS(()=>{});
 					// if verification is required, prompt for PIN (will automatically be sent from Blink by email)
 					if (r&&r.client&&r.client.verification_required&&r.client.id) {
 						console.log('Sorry. Blink requests verification. Please check you email for the required PIN.')
@@ -156,7 +140,6 @@ function blink_init() {
 							blink.VERIFY(pin,(r)=>{
 								console.log('Ok. Thanks for verifying.')
 								blink.UPDATE(()=>{});
-								blink.GET_VIDEO_EVENTS(()=>{});
 							});
 						});
 					};
