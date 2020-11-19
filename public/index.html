@@ -74,7 +74,7 @@
 				bu.onclick=()=>{blink_update_cam()};
 			}
 
-			if (h&&!h.account&&confirm('Do you want to log in?')) {blink_login(true)};
+			if ((!h||(h&&!h.account))&&confirm('Do you want to log in?')) {blink_login(true)};
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -188,8 +188,8 @@
 		#cam_videothumbnails_bar {display:flex;justify-content:space-between;padding:1rem 0 1rem 0;}
 		.videothumbnail_container {position:relative;overflow:hidden;width:30%;background-color:#e0e0e0;}
 		.videothumbnail, .videothumbnail_image, .videothumbnail_overlay {transition:0.1s;position:relative;width:100%;height:100%;}
-		.videothumbnail_caption {z-index:0;opacity:0.8;position:absolute;bottom:0.2rem;right:0.2rem;font-size:0.6rem;color:#fff;background-color:#000;width:auto;padding:0 0.3rem;border-radius:0;}
-		.videothumbnail_overlay {z-index:1;opacity:0.4;position:absolute;top:0;left:0;cursor:pointer;background-repeat:no-repeat;background-size:25%;background-position:center;background-image:url('video_play.svg');}
+		.videothumbnail_caption {z-index:0;opacity:0.8;position:absolute;bottom:0.2rem;right:0.2rem;font-size:0.5rem;color:#fff;background-color:#000;width:auto;padding:0 0.3rem;border-radius:0;}
+		.videothumbnail_overlay {z-index:1;opacity:0.4;position:absolute;top:0;left:0;cursor:pointer;background-repeat:no-repeat;background-size:22%;background-position:center;background-image:url('video_play.svg');}
 		.videothumbnail_overlay:hover {transform:scale(1.1)}
 
 		a {color:#000; _text-decoration:none;}
