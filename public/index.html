@@ -143,8 +143,7 @@
 			bu.onclick=undefined;				
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
-			let audio=document.getElementById('audio');
-			audio.play();
+			play_chicken_sound();
 			get('api','{"command":"update_cam"}',(r)=>{
 				log(r);
 				log('waiting for 5 seconds...');
@@ -178,6 +177,13 @@
 			req.send(reqobj);
 		}
 		function stopwatch(time) {if (typeof time != 'undefined') {return new Date()-time} else {return new Date()}}
+		function rand (min, max) {return Math.floor(Math.random() * (max - min + 1)) + min;}
+		function play_chicken_sound(number) {
+			let audio=document.getElementById('audio');
+			let audiothek=['chicken.wav','chicken2.wav'];
+			audio.src=audiothek[number||rand(0,audiothek.length-1)];
+			audio.play();
+		}	
 
 		function log(l) {console.log(l)};
 
