@@ -2,7 +2,7 @@
 	"short_name":"BLINK",
 	"name":"BLINK",
 	"icons":[
-		{"src":"/blink/blink180.png","sizes":"180x180","type":"image/png"}
+		{"src":"/blink/logo.png","sizes":"96x96 128x128 144x144 152x152 180x180 192x192 256x256 384x284 512x512","type":"image/png"}
 	],
 	"start_url":"/blink",
 	"background_color":"#0d5800",
