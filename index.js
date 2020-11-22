@@ -43,8 +43,8 @@ app.use('(/blink)?/api', function(req,res) {
 			});
 			break;
 
-		case 'get_status':
-			blink.GET_STATUS((r)=>{
+		case 'get_index':
+			blink.GET_INDEX((r)=>{
 				res.set('Content-Type','application/json'); res.end(r);
 			},req.body.force);
 			break;
@@ -129,17 +129,17 @@ function blink_init() {
 					// for testing-purpose: if credentials are present > ready to go without logging in (requesting new authtoken) again
 					console.log('[TESTING-MODE] resuming with authtoken from config.json '+blink.authtoken);
 					blink.write_log('>OK RESUMING '+blink.email+' | ACCOUNT_ID '+blink.account_id+' | CLIENT_ID '+blink.client_id+' | AUTHTOKEN '+blink.authtoken+' | REGION_TIER '+blink.region_tier);
-					blink.GET_STATUS(()=>{});
+					blink.GET_INDEX(()=>{});
 				} else {blink.LOGIN((r)=>{
 					console.log('Ok. http://localhost:'+port+' is now linked to your Blink-account.');
-					blink.GET_STATUS(()=>{});
+					blink.GET_INDEX(()=>{});
 					// if verification is required, prompt for PIN (will automatically be sent from Blink by email)
 					if (r&&r.client&&r.client.verification_required&&r.client.id) {
 						console.log('Sorry. Blink requests verification. Please check you email for the required PIN.')
 						prompt('> PIN       : ',undefined,false,(pin)=>{
 							blink.VERIFY(pin,(r)=>{
 								console.log('Ok. Thanks for verifying.')
-								blink.GET_STATUS(()=>{});
+								blink.GET_INDEX(()=>{});
 							});
 						});
 					};

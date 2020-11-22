@@ -5,7 +5,7 @@
 		{"src":"/blink/blink180.png","sizes":"180x180","type":"image/png"}
 	],
 	"start_url":"/blink",
-	"background_color":"#FBFBFB",
+	"background_color":"#0d5800",
 	"theme_color":"#0d5800",
 	"display":"standalone"
 }

@@ -12,7 +12,7 @@
 
 		function go() {
 			on_resize();
-			blink_get_status();
+			blink_get_index();
 		}
 
 		function on_resize() {
@@ -62,12 +62,12 @@
 				cvideo.style.display='none';
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
+					cvideo.pause();
 					cjpg.src='cam.jpg?'+h.cameras[0].updated_at;
 					cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 					
 					cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 					cvoverlay.style.top='100%';
-					cvoverlay.style.opacity='0';
 					
 					cname.innerHTML=h.cameras[0].name+' | '+Math.round((h.cameras[0].signals.temp-32)*5/9)+'°C';
 					cdate.innerHTML=new Date(h.cameras[0].updated_at).toLocaleString();
@@ -102,7 +102,7 @@
 					log(r);
 					let rj=JSON.parse(r);
 					if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {
-						if (!rj.error) {blink_get_status(true)} else {blink_login(false)}
+						if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
 					}
 				});
 			} else {
@@ -113,7 +113,7 @@
 						get('api','{"command":"login","email":"'+email+'","password":"'+pw+'"}',(r)=>{
 							log(r);
 							let rj=JSON.parse(r);
-							if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {blink_get_status(true)}
+							if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {blink_get_index(true)}
 						});
 					};
 				};		
@@ -124,7 +124,7 @@
 			if (pin) {
 				get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
 					log(r);
-					blink_get_status(true);
+					blink_get_index(true);
 				});
 			};
 		}
@@ -132,7 +132,7 @@
 			if (confirm('This will disconnect this server from Blink.\nDo you really want to do this?')) {
 				get('api','{"command":"logout"}',(r)=>{
 					log(r);
-					blink_get_status(true);
+					blink_get_index(true);
 				});
 			};
 		}
@@ -143,15 +143,14 @@
 			bu.onclick=undefined;				
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
-			cvoverlay.style.opacity='1';
 			get('api','{"command":"update_cam"}',(r)=>{
 				log(r);
 				log('waiting for 5 seconds...');
-				setTimeout(()=>{blink_get_status(true);},5000)
+				setTimeout(()=>{blink_get_index(true);},5000)
 			});
 		}
-		function blink_get_status(force) {
-			get('api','{"command":"get_status","force":'+(force?true:false)+'}',(r)=>{
+		function blink_get_index(force) {
+			get('api','{"command":"get_index","force":'+(force?true:false)+'}',(r)=>{
 				log(r);
 				display(r);
 			});
@@ -206,16 +205,16 @@
 		#cam_image_container {position:relative; display:block; background-color:#f0f0f0; overflow:hidden; margin-bottom:0.4rem;} /*1280*720*/
 		#cam_jpg {position:relative; display:none; width:100%; cursor:pointer; transition:0.2s}
 		#cam_video {position:relative; display:none}
-		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 1s;height:100%;z-index:1;opacity:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
+		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 0.5s;height:100%;z-index:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
 		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0rem 0.2rem;}
 		
 		#cam_videothumbnails_bar {display:flex;justify-content:space-between;padding:1rem 0 1rem 0;}
 		.videothumbnail_container {position:relative;overflow:hidden;width:30%;background-color:#f0f0f0;}
-		.videothumbnail, .videothumbnail_image, .videothumbnail_overlay {transition:0.1s;position:relative;width:100%;height:100%;}
+		.videothumbnail, .videothumbnail_image, .videothumbnail_overlay {transition:0.5s;position:relative;width:100%;height:100%;}
 		.videothumbnail_image {display:none;}
 		.videothumbnail_caption {z-index:0;opacity:0.8;position:absolute;bottom:0.2rem;right:0.2rem;font-size:0.5rem;color:#fff;background-color:#000;width:auto;padding:0 0.3rem;border-radius:0;}
-		.videothumbnail_overlay {display:none;z-index:1;opacity:0.3;position:absolute;top:0;left:0;cursor:pointer;background-repeat:no-repeat;background-size:50%;background-position:center;background-image:url('video_play.svg');}
-		.videothumbnail_overlay:hover {transform:scale(1.1)}
+		.videothumbnail_overlay {display:none;z-index:1;opacity:0.5;position:absolute;top:0;left:0;cursor:pointer;background-repeat:no-repeat;background-size:30%;background-position:5% 90%;background-image:url('video_play.svg');}
+		.videothumbnail_overlay:hover {opacity:0.8}
 
 		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
