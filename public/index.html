@@ -151,6 +151,11 @@
 				setTimeout(()=>{blink_get_index(true);},5000)
 			});
 		}
+		function blink_capture_video() {
+			get('api','{"command":"capture_video"}',(r)=>{
+				log(r);
+			});			
+		}
 		function blink_get_index(force) {
 			get('api','{"command":"get_index","force":'+(force?true:false)+'}',(r)=>{
 				log(r);
@@ -219,7 +224,7 @@
 		.videothumbnail_overlay:hover {opacity:0.8}
 
 		#audio {display:none}
-		
+
 		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
 		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;padding:0.2rem 0rem;margin:0.2rem 0 0.2rem 0;}

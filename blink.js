@@ -159,6 +159,17 @@ Blink.prototype.UPDATE_CAM = function (c,n,callback) {
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
 }
 
+Blink.prototype.CAPTURE_VIDEO = function (c,n,callback) {
+	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined;
+	let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
+	if (cam&&network) {
+	    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam.id+'/clip','POST'),'',false,(r)=>{
+	     	this.write_log('>OK CAPTURE_VIDEO '+cam.id+' @ '+network.id);
+	    	callback(r);
+	    });
+	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
+}
+
 Blink.prototype.GET_MEDIA = function (m,callback) {
 	let media=(m?'/api/v2/accounts/'+this.account_id+'/media/clip/'+m+'.mp4':undefined)||((this.videoevents.media)?this.videoevents.media[0].media:undefined);
 	if (media) {

@@ -55,6 +55,12 @@ app.use('(/blink)?/api', function(req,res) {
 			});
 			break;
 
+		case 'capture_video':
+			blink.CAPTURE_VIDEO(undefined,undefined,(r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
 		case 'get_log':
 			res.set('Content-Type','text/plain');
 			res.end(blink.log.read());
