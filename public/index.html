@@ -144,14 +144,11 @@
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			cvoverlay.style.opacity='1';
-			/*
 			get('api','{"command":"update_cam"}',(r)=>{
 				log(r);
 				log('waiting for 5 seconds...');
 				setTimeout(()=>{blink_get_status(true);},5000)
 			});
-			*/
-			setTimeout(()=>{blink_get_status();},5000)
 		}
 		function blink_get_status(force) {
 			get('api','{"command":"get_status","force":'+(force?true:false)+'}',(r)=>{
@@ -209,7 +206,7 @@
 		#cam_image_container {position:relative; display:block; background-color:#f0f0f0; overflow:hidden; margin-bottom:0.4rem;} /*1280*720*/
 		#cam_jpg {position:relative; display:none; width:100%; cursor:pointer; transition:0.2s}
 		#cam_video {position:relative; display:none}
-		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 1s;height:100%;z-index:1;opacity:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:10rem 1rem;background-image:url('chicken.svg');}
+		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 1s;height:100%;z-index:1;opacity:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
 		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0rem 0.2rem;}
 		
 		#cam_videothumbnails_bar {display:flex;justify-content:space-between;padding:1rem 0 1rem 0;}
