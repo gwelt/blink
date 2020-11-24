@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang=de>
+<head>
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>KORNKLICKER</title>
+	<style>
+		* {box-sizing: border-box;}
+		html, body, section, div, input, textarea, select, button {border-radius: 0.3rem;font-family: Verdana, Geneva, sans-serif; font-size: 1.3rem; width:100%; overflow-wrap:break-word;}
+		button {outline:0; margin:0.1rem 0;}
+		html, body {height:100%;}
+		body {border:0; padding:0%; margin:0; background-color:#fbfbfb; color: #000;}
+
+		.bigscreen {height:100%;padding:0rem 1rem 1rem 1rem; border-radius:0; margin:0;}
+		.screen {min-width:300px; max-width:420px; margin:auto; text-align:center;}
+
+		@media only screen and (max-width: 320px) {
+			.bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
+			.screen {min-width:260px;}
+			html, body, section, div, input, textarea, select, button {font-size: 1rem}
+		}
+		@media only screen and (min-width: 768px) {
+			.screen {min-width:640px; max-width:640px; margin:auto;}
+			html, body, section, div, input, textarea, select, button {font-size: 1.5rem}
+		}
+
+		@media print {
+			.screen {max-width:100%; margin:auto;}
+			body {background-color:#FFFFFF;}
+		}
+
+	</style>
+</head>
+
+<body>
+	<div id=bigscreen class=bigscreen>
+		<div id=screen class=screen>
+			<div id=kornklicker></div><script src="kornklicker.js"></script>
+		</div>
+	</div>
+</body>
+</html>
