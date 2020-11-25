@@ -2,7 +2,6 @@ function Bauer() {
 	this.koerner=0;
 	this.maschinen=[]; maschinen_preisleistungsliste.forEach((m)=>{this.maschinen.push(new Maschine(m.typ,this,0))});
 	this.verbesserungen=[];
-	setInterval(()=>{this.save()},60000);
 	return this;
 }
 
@@ -58,7 +57,11 @@ const maschinen_preisleistungsliste = [
 
 
 /* === INITIALISIERUNG ================================================================== */
-var bauer=new Bauer(); kk_HTML(bauer); bauer.load();
+var bauer=new Bauer();
+kk_HTML(bauer);
+bauer.load();
+setInterval(()=>{bauer.save()},60000);
+window.onunload = function() {bauer.save()}
 
 /* === HTML-DARSTELLUNG ================================================================= */
 function kk_HTML(bauer) {
@@ -95,5 +98,3 @@ function kk_HTML(bauer) {
 		kk_marktplatz.appendChild(r);
 	});
 }
-
-
