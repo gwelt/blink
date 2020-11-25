@@ -17,7 +17,7 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 	this.maschinen.forEach((m)=>{
 		if ((this.besitzt()<m.preis())&&(m.anzahl<1)) {preissegment_warnungen++} else {preissegment_warnungen=0}
 		if (preissegment_warnungen<2) {document.getElementById('kk_row_'+m.typ).style.display='flex';}
-		document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ;
+		document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
 		let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
 		preis.innerHTML='$'+m.preis();
 		if (this.besitzt()>=m.preis()) {		
@@ -52,10 +52,10 @@ Maschine.prototype.stopp = function() {if (this.prozess_id) {clearInterval(this.
 
 function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":()=>{},"leistung":()=>{}}}
 const maschinen_preisleistungsliste = [
-	{"typ":"Kueken","preis":(n)=>{return Math.round(Math.exp(n/6.6)*20)},"leistung":(n)=>{return n*1}},
-	{"typ":"Huhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Kueken').preis(15))},"leistung":(n)=>{return n*2}},
-	{"typ":"Doppelhuhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Huhn').preis(10))},"leistung":(n)=>{return n*4}},
-	{"typ":"Kornado","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Doppelhuhn').preis(25))},"leistung":(n)=>{return n*8.4}}
+	{"typ":"Kueken","preis":(n)=>{return Math.round(Math.exp(n/6.6)*18)},"leistung":(n)=>{return n*0.1}},
+	{"typ":"Huhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Kueken').preis(12))},"leistung":(n)=>{return n*1}},
+	{"typ":"Doppelhuhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Huhn').preis(20))},"leistung":(n)=>{return n*2}},
+	{"typ":"Kornado","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Doppelhuhn').preis(25))},"leistung":(n)=>{return n*4.4}}
 ];
 
 
