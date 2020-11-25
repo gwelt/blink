@@ -13,7 +13,10 @@ Bauer.prototype.zahlt = function(n) {if (this.besitzt()>=n) {this.erhaelt(-n); r
 Bauer.prototype.aktualisiert_buchhaltung = function() {
 	document.getElementById('kk_koerner').innerHTML=Math.floor(this.besitzt());
 	document.getElementById('kk_produktion').innerHTML='Koerner pro Sekunde: '+this.maschinen.reduce((a,c)=>{return a+c.leistung()},0).toFixed(2);
+	let preissegment_warnungen=0;
 	this.maschinen.forEach((m)=>{
+		if ((this.besitzt()<m.preis())&&(m.anzahl<1)) {preissegment_warnungen++} else {preissegment_warnungen=0}
+		if (preissegment_warnungen<2) {document.getElementById('kk_row_'+m.typ).style.display='flex';}
 		document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ;
 		let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
 		preis.innerHTML='$'+m.preis();
@@ -24,15 +27,14 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 		document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
 	});
 }
-Bauer.prototype.save = function() {localStorage.setItem("kk_bauer",JSON.stringify(this))}
-Bauer.prototype.remove = function() {localStorage.removeItem("kk_bauer")}
-Bauer.prototype.load = function() {
+Bauer.prototype.schreibt_konto = function() {localStorage.setItem("kk_bauer",JSON.stringify(this))}
+Bauer.prototype.reset_konto = function() {localStorage.removeItem("kk_bauer");this.liest_konto();}
+Bauer.prototype.liest_konto = function() {
 	let b=undefined; try {b=JSON.parse(localStorage.getItem("kk_bauer"))} catch {()=>{}}
-	if (b) {
-		this.koerner=b.koerner;
-		this.maschinen.forEach((m)=>{m.stopp(); m.anzahl=b.maschinen.find(e=>e.typ==m.typ).anzahl||0; m.start(this);});
-		this.verbesserungen=b.verbesserungen;
-	} else {this.erhaelt(0)}
+	this.koerner=b?b.koerner:0;
+	this.maschinen.forEach((m)=>{m.stopp(); m.anzahl=b?(b.maschinen.find(e=>e.typ==m.typ)||{"anzahl":0}).anzahl:0; m.start(this);});
+	this.verbesserungen=b?b.verbesserungen:0;
+	this.aktualisiert_buchhaltung();
 }
 
 function Maschine(typ,besitzer,anzahl) {
@@ -42,26 +44,27 @@ function Maschine(typ,besitzer,anzahl) {
 	return this;
 }
 
-Maschine.prototype.leistung = function() {return maschinen_verzeichnis(this.typ).leistung(this)}
-Maschine.prototype.preis = function() {return maschinen_verzeichnis(this.typ).preis(this)}
+Maschine.prototype.leistung = function() {return maschinen_verzeichnis(this.typ).leistung(this.anzahl)}
+Maschine.prototype.preis = function() {return maschinen_verzeichnis(this.typ).preis(this.anzahl)}
 Maschine.prototype.kaufen = function(besitzer) {if (besitzer.zahlt(this.preis())) {this.anzahl++; this.start(besitzer); return true;} else {return false}}
 Maschine.prototype.start = function(besitzer) {this.stopp(); this.prozess_id=setInterval(()=>{besitzer.erhaelt(this.leistung()/10)},100)}
 Maschine.prototype.stopp = function() {if (this.prozess_id) {clearInterval(this.prozess_id)}}
 
-function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":0,"leistung":0}}
+function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":()=>{},"leistung":()=>{}}}
 const maschinen_preisleistungsliste = [
-	{"typ":"Huhn","preis":m=>Math.round(Math.exp(m.anzahl/6.6)*18*(m.leistung()||1)),"leistung":m=>1*m.anzahl},
-	{"typ":"Doppelhuhn","preis":m=>Math.round(Math.exp(m.anzahl/6.6)*20*(m.leistung()||2)),"leistung":m=>2*m.anzahl},
-	{"typ":"Quadruhn","preis":m=>Math.round(Math.exp(m.anzahl/6.6)*22*(m.leistung()||4)),"leistung":m=>4*m.anzahl}
+	{"typ":"Kueken","preis":(n)=>{return Math.round(Math.exp(n/6.6)*20)},"leistung":(n)=>{return n*1}},
+	{"typ":"Huhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Kueken').preis(15))},"leistung":(n)=>{return n*2}},
+	{"typ":"Doppelhuhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Huhn').preis(10))},"leistung":(n)=>{return n*4}},
+	{"typ":"Kornado","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Doppelhuhn').preis(25))},"leistung":(n)=>{return n*8.4}}
 ];
 
 
 /* === INITIALISIERUNG ================================================================== */
 var bauer=new Bauer();
 kk_HTML(bauer);
-bauer.load();
-setInterval(()=>{bauer.save()},60000);
-window.onunload = function() {bauer.save()}
+bauer.liest_konto();
+setInterval(()=>{bauer.schreibt_konto()},60000);
+window.onunload = function() {bauer.schreibt_konto()}
 
 /* === HTML-DARSTELLUNG ================================================================= */
 function kk_HTML(bauer) {
@@ -84,12 +87,12 @@ function kk_HTML(bauer) {
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 	maschinen_preisleistungsliste.forEach((m)=>{
 		let r=document.createElement('div');
-		r.style.display='flex';
+		r.id='kk_row_'+m.typ;
+		r.style.display='none';
 		r.style.justifyContent='space-between';
 		function cell(id,width) {
 			let c=document.createElement('div');
 			c.id=id; c.style.fontSize='0.8rem'; c.style.border='1px solid black'; c.style.borderRadius='0'; c.style.margin='0 0 0.2rem 0'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
-			c.innerHTML='&nbsp;';
 			return c;
 		}
 		r.appendChild(cell('kk_cell_'+m.typ+'_typ','50%'));
