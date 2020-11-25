@@ -1,7 +1,7 @@
-function Bauer(koerner,maschinen,verbesserungen) {
-	this.koerner=koerner||0;
-	this.maschinen=maschinen||[]; if (!this.maschinen.length) {maschinen_preisleistungsliste.forEach((m)=>{this.maschinen.push(new Maschine(m.typ,this,0))})};
-	this.verbesserungen=verbesserungen||[];
+function Bauer(b) {
+	this.koerner=b?b.koerner:0;
+	this.maschinen=[]; maschinen_preisleistungsliste.forEach((m)=>{ let x=new Maschine(m.typ,this,b?b.maschinen.find(e=>e.typ==m.typ).anzahl:0); x.start(this); this.maschinen.push(x); });
+	this.verbesserungen=b?b.verbesserungen:[];
 	return this;
 }
 
@@ -18,7 +18,7 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 		let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
 		preis.innerHTML='$'+m.preis();
 		if (this.besitzt()>=m.preis()) {		
-			preis.onclick=()=>{m.kaufen()};
+			preis.onclick=()=>{m.kaufen(this)};
 			preis.style.cursor='pointer'; preis.style.backgroundColor='#F0F0F0';
 		} else {preis.style.cursor=''; preis.style.backgroundColor='';}
 		document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
@@ -28,7 +28,6 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 
 function Maschine(typ,besitzer,anzahl) {
 	this.typ=typ;
-	this.besitzer=besitzer;
 	this.anzahl=anzahl||0;
 	this.prozess_id=undefined;
 	return this;
@@ -36,8 +35,8 @@ function Maschine(typ,besitzer,anzahl) {
 
 Maschine.prototype.leistung = function() {return maschinen_verzeichnis(this.typ).leistung(this)}
 Maschine.prototype.preis = function() {return maschinen_verzeichnis(this.typ).preis(this)}
-Maschine.prototype.kaufen = function() {if (this.besitzer.zahlt(this.preis())) {this.anzahl++; this.start(); return true;} else {return false}}
-Maschine.prototype.start = function() {this.stopp(); this.prozess_id=setInterval(()=>{this.besitzer.erhaelt(this.leistung()/10)},100)}
+Maschine.prototype.kaufen = function(besitzer) {if (besitzer.zahlt(this.preis())) {this.anzahl++; this.start(besitzer); return true;} else {return false}}
+Maschine.prototype.start = function(besitzer) {this.stopp(); this.prozess_id=setInterval(()=>{besitzer.erhaelt(this.leistung()/10)},100)}
 Maschine.prototype.stopp = function() {if (this.prozess_id) {clearInterval(this.prozess_id)}}
 
 function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":0,"leistung":0}}
@@ -49,7 +48,9 @@ const maschinen_preisleistungsliste = [
 
 
 /* === INITIALISIERUNG ================================================================== */
-const bauer=new Bauer(); kk_HTML(bauer); bauer.erhaelt(0);
+function load() {bauer.koerner=0; bauer.maschinen.forEach((m)=>{m.stopp()}); bauer=new Bauer(JSON.parse(localStorage.getItem("kk_bauer")))}
+function save() {return localStorage.setItem("kk_bauer",JSON.stringify(bauer))}
+var bauer=new Bauer(); kk_HTML(bauer); bauer.erhaelt(0);
 
 /* === HTML-DARSTELLUNG ================================================================= */
 function kk_HTML(bauer) {
@@ -86,3 +87,5 @@ function kk_HTML(bauer) {
 		kk_marktplatz.appendChild(r);
 	});
 }
+
+
