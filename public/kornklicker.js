@@ -1,7 +1,7 @@
-function Bauer(b) {
-	this.koerner=b?b.koerner:0;
-	this.maschinen=[]; maschinen_preisleistungsliste.forEach((m)=>{ let x=new Maschine(m.typ,this,b?b.maschinen.find(e=>e.typ==m.typ).anzahl:0); x.start(this); this.maschinen.push(x); });
-	this.verbesserungen=b?b.verbesserungen:[];
+function Bauer() {
+	this.koerner=0;
+	this.maschinen=[]; maschinen_preisleistungsliste.forEach((m)=>{this.maschinen.push(new Maschine(m.typ,this,0))});
+	this.verbesserungen=[];
 	return this;
 }
 
@@ -24,7 +24,16 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 		document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
 	});
 }
-
+Bauer.prototype.save = function() {localStorage.setItem("kk_bauer",JSON.stringify(this))}
+Bauer.prototype.remove = function() {localStorage.removeItem("kk_bauer")}
+Bauer.prototype.load = function() {
+	let b=undefined; try {b=JSON.parse(localStorage.getItem("kk_bauer"))} catch {()=>{}}
+	if (b) {
+		this.koerner=b.koerner;
+		this.maschinen.forEach((m)=>{m.stopp(); m.anzahl=b.maschinen.find(e=>e.typ==m.typ).anzahl||0; m.start(this);});
+		this.verbesserungen=b.verbesserungen;
+	} else {this.erhaelt(0)}
+}
 
 function Maschine(typ,besitzer,anzahl) {
 	this.typ=typ;
@@ -48,9 +57,7 @@ const maschinen_preisleistungsliste = [
 
 
 /* === INITIALISIERUNG ================================================================== */
-function load() {bauer.koerner=0; bauer.maschinen.forEach((m)=>{m.stopp()}); bauer=new Bauer(JSON.parse(localStorage.getItem("kk_bauer")))}
-function save() {return localStorage.setItem("kk_bauer",JSON.stringify(bauer))}
-var bauer=new Bauer(); kk_HTML(bauer); bauer.erhaelt(0);
+var bauer=new Bauer(); kk_HTML(bauer); bauer.load();
 
 /* === HTML-DARSTELLUNG ================================================================= */
 function kk_HTML(bauer) {
