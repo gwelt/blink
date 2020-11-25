@@ -12,7 +12,7 @@ Bauer.prototype.klickt = function() {this.erhaelt(this.leistung())}
 Bauer.prototype.zahlt = function(n) {if (this.besitzt()>=n) {this.erhaelt(-n); return true} else {return false}}
 Bauer.prototype.aktualisiert_buchhaltung = function() {
 	document.getElementById('kk_koerner').innerHTML=Math.floor(this.besitzt());
-	document.getElementById('kk_produktion').innerHTML='Koerner pro Sekunde: '+this.maschinen.reduce((a,c)=>{return a+c.leistung()},0).toFixed(2);
+	document.getElementById('kk_produktion').innerHTML=this.maschinen.reduce((a,c)=>{return a+c.leistung()},0).toFixed(1)+' kps';
 	let preissegment_warnungen=0;
 	this.maschinen.forEach((m)=>{
 		if ((this.besitzt()<m.preis())&&(m.anzahl<1)) {preissegment_warnungen++} else {preissegment_warnungen=0}
@@ -77,12 +77,13 @@ function kk_HTML(bauer) {
 	kk.style.top='2rem';
 	kk.style.padding='1rem';
 	kk_koerner.innerHTML='-';
-	kk_koerner.style.padding='0.5rem 0';
+	kk_koerner.style.padding='0.25rem 0';
+	kk_koerner.style.fontWeight='bold';
 	kk_produktion.innerHTML='-';
-	kk_produktion.style.padding='0.5rem 0';
-	kk_produktion.style.fontSize='0.8rem';
-	kk_btn_klick.style.margin='0.5rem 0';
-	kk_btn_klick.appendChild(document.createTextNode('Klick ein Korn!'));
+	kk_produktion.style.padding='0.1rem 0';
+	kk_produktion.style.fontSize='0.75rem';
+	kk_btn_klick.style.margin='1rem 0';
+	kk_btn_klick.appendChild(document.createTextNode('Korn +1'));
 	kk_btn_klick.onclick=()=>{bauer.klickt()};
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 	maschinen_preisleistungsliste.forEach((m)=>{
@@ -92,7 +93,7 @@ function kk_HTML(bauer) {
 		r.style.justifyContent='space-between';
 		function cell(id,width) {
 			let c=document.createElement('div');
-			c.id=id; c.style.fontSize='0.8rem'; c.style.border='1px solid black'; c.style.borderRadius='0'; c.style.margin='0 0 0.2rem 0'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
+			c.id=id; c.style.fontSize='0.75rem'; c.style.border='1px solid black'; c.style.borderRadius='0'; c.style.margin='0 0 0.2rem 0'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
 			return c;
 		}
 		r.appendChild(cell('kk_cell_'+m.typ+'_typ','50%'));
