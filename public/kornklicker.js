@@ -2,6 +2,7 @@ function Bauer() {
 	this.koerner=0;
 	this.maschinen=[]; maschinen_preisleistungsliste.forEach((m)=>{this.maschinen.push(new Maschine(m.typ,this,0))});
 	this.verbesserungen=[];
+	setInterval(()=>{this.save()},60000);
 	return this;
 }
 
