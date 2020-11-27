@@ -19,11 +19,12 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 		if (preissegment_warnungen<2) {document.getElementById('kk_row_'+m.typ).style.display='flex';}
 		document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
 		let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
-		preis.innerHTML='$'+m.preis();
 		if (this.besitzt()>=m.preis()) {		
+			preis.innerHTML='$'+m.preis();
 			preis.onclick=()=>{m.kaufen(this)};
-			preis.style.cursor='pointer'; preis.style.backgroundColor='#F0F0F0';
+			preis.style.cursor='pointer'; preis.style.backgroundColor='#E0E0E0';
 		} else {preis.style.cursor=''; preis.style.backgroundColor='';}
+		if (m.anzahl>0) {preis.innerHTML='$'+m.preis()}
 		document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
 	});
 }
