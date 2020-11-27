@@ -18,12 +18,17 @@
 		function on_resize() {
 			document.getElementById('cam_image_container').style.height=document.getElementById('cam_image_container').clientWidth*0.5625+'px';
 			document.getElementById('vt0d').style.minHeight=document.getElementById('vt0d').clientWidth*0.5625+'px';
-			document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
-			document.getElementById('footer_image').style.width=document.getElementById('cam_image_container').clientWidth*1.4+'px';
-			document.getElementById('footer_image').style.left=(document.getElementById('bigscreen').clientWidth/2)-(document.getElementById('cam_image_container').clientWidth*1.4/2)+'px';
-			document.getElementById('footer_image').style.bottom='-'+document.getElementById('footer_image').clientHeight/4+'px';
-			document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight/2+'px';
-			//document.getElementById('bigscreen').style.backgroundColor='#c0ffc0';
+			if (document.getElementById('bigscreen').clientWidth>800) {
+				document.getElementById('bigscreen').style.backgroundSize='0px';
+				document.getElementById('footer_image').style.display='none';
+			} else {
+				document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
+				document.getElementById('footer_image').style.width=document.getElementById('cam_image_container').clientWidth*1.4+'px';
+				document.getElementById('footer_image').style.left=(document.getElementById('bigscreen').clientWidth/2)-(document.getElementById('cam_image_container').clientWidth*1.4/2)+'px';
+				document.getElementById('footer_image').style.bottom='-'+document.getElementById('footer_image').clientHeight/4+'px';
+				document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight/2+'px';
+				//document.getElementById('bigscreen').style.backgroundColor='#c0ffc0';
+			}
 		}
 
 		let global_homescreen_and_videoevents=undefined;
@@ -262,11 +267,10 @@
 				</div>
 			</div>
 
+			<div id=kornklicker></div><script src="kornklicker.js"></script>
+		
 			<div id=image_footer_height_space>&nbsp;</div>
 		</div>
-		
-		<div id=kornklicker></div><script src="kornklicker.js"></script>
-		
 		<img id=footer_image src=gras.svg>
 		<audio id=audio controls><source src="chicken.wav" type="audio/wav"></audio>
 	</div>
