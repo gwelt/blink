@@ -70,11 +70,10 @@ function kk_HTML(bauer) {
 	let kk=document.getElementById('kornklicker');
 	let kk_koerner=document.createElement('div'); kk_koerner.id='kk_koerner'; kk.appendChild(kk_koerner);
 	let kk_produktion=document.createElement('div'); kk_produktion.id='kk_produktion'; kk.appendChild(kk_produktion);
-	//let kk_btn_klick=document.createElement('button'); kk.appendChild(kk_btn_klick);
 	let kk_png_klick_container=document.createElement('div'); kk.appendChild(kk_png_klick_container);
 	let kk_png_klick=document.createElement('IMG'); kk_png_klick_container.appendChild(kk_png_klick);
 	kk.style.position='relative';
-	kk.style.backgroundColor='#fff';
+	//kk.style.backgroundColor='#fff';
 	kk.style.top='2rem';
 	kk.style.padding='1rem';
 	kk_koerner.innerHTML='-';
@@ -83,17 +82,12 @@ function kk_HTML(bauer) {
 	kk_produktion.innerHTML='-';
 	kk_produktion.style.padding='0.1rem 0';
 	kk_produktion.style.fontSize='0.75rem';
-	//kk_btn_klick.style.margin='1rem 0';
-	//kk_btn_klick.appendChild(document.createTextNode('Korn +1'));
-	//kk_btn_klick.onclick=()=>{bauer.klickt()};
 	kk_png_klick.src='kk_koerner.png';
 	kk_png_klick.width=kk.clientWidth/2;
 	kk_png_klick.style.position='relative';
 	kk_png_klick.style.left='4%';
 	kk_png_klick.style.transition='all 0.5s';
 	kk_png_klick.style.cursor='pointer';
-	//kk_png_klick.addEventListener('mouseover',()=>{kk_png_klick.style.width=kk_png_klick.clientWidth-10+'px'});
-	//kk_png_klick.addEventListener('mouseout',()=>{kk_png_klick.style.width=kk_png_klick.clientWidth+10+'px'});
 	kk_png_klick.onclick=()=>{bauer.klickt()};
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 	maschinen_preisleistungsliste.forEach((m)=>{
