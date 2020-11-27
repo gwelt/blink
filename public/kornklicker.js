@@ -13,22 +13,16 @@ Bauer.prototype.zahlt = function(n) {if (this.besitzt()>=n) {this.erhaelt(-n); r
 Bauer.prototype.aktualisiert_buchhaltung = function() {
 	document.getElementById('kk_koerner').innerHTML=Math.floor(this.besitzt());
 	document.getElementById('kk_produktion').innerHTML=this.maschinen.reduce((a,c)=>{return a+c.leistung()},0).toFixed(1)+' kps';
-	let preissegment_warnungen=0;
 	this.maschinen.forEach((m)=>{
-		if ((this.besitzt()<m.preis())&&(m.anzahl<1)) {preissegment_warnungen++} else {preissegment_warnungen=0}
-		if (preissegment_warnungen<2) {
+		let preis=m.preis();
+		if ((m.anzahl>0)||(this.besitzt()>=preis/10)) {
 			document.getElementById('kk_row_'+m.typ).style.display='flex';
 			document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
-			let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
-			if (this.besitzt()>=m.preis()) {		
-				preis.innerHTML='$'+m.preis();
-				preis.onclick=()=>{m.kaufen(this)};
-				preis.style.cursor='pointer'; preis.style.backgroundColor='#E0E0E0';
-			} else {
-				preis.style.cursor=''; preis.style.backgroundColor='';
-				if ((m.anzahl>0)||(this.besitzt()*2>=m.preis())) {preis.innerHTML='$'+m.preis()}
-			}
 			document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
+			let e_preis=document.getElementById('kk_cell_'+m.typ+'_preis');
+			if ((this.besitzt()>=preis/2)||(m.anzahl>0)) {e_preis.innerHTML='$'+preis}
+			if (this.besitzt()>=preis) {e_preis.onclick=()=>{m.kaufen(this)}; e_preis.style.cursor='pointer'; e_preis.style.backgroundColor='#0078D4'; e_preis.style.color='#FFF'; e_preis.style.border='0px solid #FFF';}
+			else {e_preis.style.cursor=''; e_preis.style.backgroundColor=''; e_preis.style.color='';}
 		}
 	});
 }
@@ -76,9 +70,11 @@ function kk_HTML(bauer) {
 	let kk=document.getElementById('kornklicker');
 	let kk_koerner=document.createElement('div'); kk_koerner.id='kk_koerner'; kk.appendChild(kk_koerner);
 	let kk_produktion=document.createElement('div'); kk_produktion.id='kk_produktion'; kk.appendChild(kk_produktion);
-	let kk_btn_klick=document.createElement('button'); kk.appendChild(kk_btn_klick);
+	//let kk_btn_klick=document.createElement('button'); kk.appendChild(kk_btn_klick);
+	let kk_png_klick_container=document.createElement('div'); kk.appendChild(kk_png_klick_container);
+	let kk_png_klick=document.createElement('IMG'); kk_png_klick_container.appendChild(kk_png_klick);
 	kk.style.position='relative';
-	kk.style.backgroundColor='#c0c0c0';
+	kk.style.backgroundColor='#fff';
 	kk.style.top='2rem';
 	kk.style.padding='1rem';
 	kk_koerner.innerHTML='-';
@@ -87,18 +83,29 @@ function kk_HTML(bauer) {
 	kk_produktion.innerHTML='-';
 	kk_produktion.style.padding='0.1rem 0';
 	kk_produktion.style.fontSize='0.75rem';
-	kk_btn_klick.style.margin='1rem 0';
-	kk_btn_klick.appendChild(document.createTextNode('Korn +1'));
-	kk_btn_klick.onclick=()=>{bauer.klickt()};
+	//kk_btn_klick.style.margin='1rem 0';
+	//kk_btn_klick.appendChild(document.createTextNode('Korn +1'));
+	//kk_btn_klick.onclick=()=>{bauer.klickt()};
+	kk_png_klick.src='kk_koerner.png';
+	kk_png_klick.width=kk.clientWidth/2;
+	kk_png_klick.style.position='relative';
+	kk_png_klick.style.left='4%';
+	kk_png_klick.style.transition='all 0.5s';
+	kk_png_klick.style.cursor='pointer';
+	//kk_png_klick.addEventListener('mouseover',()=>{kk_png_klick.style.width=kk_png_klick.clientWidth-10+'px'});
+	//kk_png_klick.addEventListener('mouseout',()=>{kk_png_klick.style.width=kk_png_klick.clientWidth+10+'px'});
+	kk_png_klick.onclick=()=>{bauer.klickt()};
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 	maschinen_preisleistungsliste.forEach((m)=>{
 		let r=document.createElement('div');
 		r.id='kk_row_'+m.typ;
 		r.style.display='none';
 		r.style.justifyContent='space-between';
+		r.style.borderRadius='0';
+		r.style.backgroundColor='#f0f0f0';
 		function cell(id,width) {
 			let c=document.createElement('div');
-			c.id=id; c.style.fontSize='0.75rem'; c.style.border='1px solid black'; c.style.borderRadius='0'; c.style.margin='0 0 0.2rem 0'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
+			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.border='1px solid #f0f0f0'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
 			return c;
 		}
 		r.appendChild(cell('kk_cell_'+m.typ+'_typ','50%'));
