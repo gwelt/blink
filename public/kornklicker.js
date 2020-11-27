@@ -71,24 +71,25 @@ function kk_HTML(bauer) {
 	let kk_koerner=document.createElement('div'); kk_koerner.id='kk_koerner'; kk.appendChild(kk_koerner);
 	let kk_produktion=document.createElement('div'); kk_produktion.id='kk_produktion'; kk.appendChild(kk_produktion);
 	let kk_png_klick_container=document.createElement('div'); kk.appendChild(kk_png_klick_container);
-	let kk_png_klick=document.createElement('IMG'); kk_png_klick_container.appendChild(kk_png_klick);
 	kk.style.position='relative';
 	//kk.style.backgroundColor='#fff';
-	kk.style.top='2rem';
-	kk.style.margin='0 0 5rem 0';
-	kk_koerner.innerHTML='-';
-	kk_koerner.style.padding='0.25rem 0';
+	//kk.style.margin='10rem 0 6rem 0';
+	kk_koerner.innerHTML='';
+	kk_koerner.style.fontSize='2rem';
+	kk_koerner.style.padding='1rem 0';
 	kk_koerner.style.fontWeight='bold';
-	kk_produktion.innerHTML='-';
-	kk_produktion.style.padding='0.1rem 0';
+	kk_produktion.innerHTML='';
 	kk_produktion.style.fontSize='0.75rem';
-	kk_png_klick.src='kk_koerner.png';
-	kk_png_klick.width=kk.clientWidth/2;
-	kk_png_klick.style.position='relative';
-	kk_png_klick.style.left='4%';
-	kk_png_klick.style.transition='all 0.5s';
-	kk_png_klick.style.cursor='pointer';
-	kk_png_klick.onclick=()=>{bauer.klickt()};
+	
+	kk_png_klick_container.style.margin='0.5rem 0';
+	kk_png_klick_container.style.backgroundImage="url('kk_koerner.png')";
+	kk_png_klick_container.style.height=kk.clientWidth/2+'px';
+	kk_png_klick_container.style.backgroundSize='contain';
+	kk_png_klick_container.style.backgroundRepeat='no-repeat';
+	kk_png_klick_container.style.backgroundPosition='55% center';
+	kk_png_klick_container.style.cursor='pointer';
+	
+	kk_png_klick_container.onclick=()=>{bauer.klickt()};
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 	maschinen_preisleistungsliste.forEach((m)=>{
 		let r=document.createElement('div');
