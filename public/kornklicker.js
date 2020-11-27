@@ -16,15 +16,18 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 	let preissegment_warnungen=0;
 	this.maschinen.forEach((m)=>{
 		if ((this.besitzt()<m.preis())&&(m.anzahl<1)) {preissegment_warnungen++} else {preissegment_warnungen=0}
-		if (preissegment_warnungen<2) {document.getElementById('kk_row_'+m.typ).style.display='flex';}
-		document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
-		let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
-		if (this.besitzt()>=m.preis()) {		
-			preis.innerHTML='$'+m.preis();
-			preis.onclick=()=>{m.kaufen(this)};
-			preis.style.cursor='pointer'; preis.style.backgroundColor='#E0E0E0';
-		} else {preis.style.cursor=''; preis.style.backgroundColor=''; if (m.anzahl>0) {preis.innerHTML='$'+m.preis()}}
-		document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
+		if (preissegment_warnungen<2) {
+			document.getElementById('kk_row_'+m.typ).style.display='flex';
+			document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
+			let preis=document.getElementById('kk_cell_'+m.typ+'_preis');
+			if (this.besitzt()>=m.preis()) {		
+				preis.innerHTML='$'+m.preis();
+				preis.onclick=()=>{m.kaufen(this)};
+				preis.style.cursor='pointer'; preis.style.backgroundColor='#E0E0E0';
+			} else {preis.style.cursor=''; preis.style.backgroundColor='';}
+			if ((m.anzahl>0)||(this.besitzt()*2>=m.preis())) {preis.innerHTML='$'+m.preis()}
+			document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
+		}
 	});
 }
 Bauer.prototype.schreibt_konto = function() {localStorage.setItem("kk_bauer",JSON.stringify(this))}
