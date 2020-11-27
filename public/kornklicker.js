@@ -88,6 +88,7 @@ function kk_HTML(bauer) {
 	kk_png_klick_container.style.backgroundRepeat='no-repeat';
 	kk_png_klick_container.style.backgroundPosition='55% center';
 	kk_png_klick_container.style.cursor='pointer';
+	kk_png_klick_container.style.WebkitTapHighlightColor='transparent';
 	
 	kk_png_klick_container.onclick=()=>{bauer.klickt()};
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
