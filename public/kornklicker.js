@@ -24,8 +24,10 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 				preis.innerHTML='$'+m.preis();
 				preis.onclick=()=>{m.kaufen(this)};
 				preis.style.cursor='pointer'; preis.style.backgroundColor='#E0E0E0';
-			} else {preis.style.cursor=''; preis.style.backgroundColor='';}
-			if ((m.anzahl>0)||(this.besitzt()*2>=m.preis())) {preis.innerHTML='$'+m.preis()}
+			} else {
+				preis.style.cursor=''; preis.style.backgroundColor='';
+				if ((m.anzahl>0)||(this.besitzt()*2>=m.preis())) {preis.innerHTML='$'+m.preis()}
+			}
 			document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
 		}
 	});
