@@ -75,7 +75,7 @@ function kk_HTML(bauer) {
 	kk.style.position='relative';
 	//kk.style.backgroundColor='#fff';
 	kk.style.top='2rem';
-	kk.style.padding='1rem';
+	kk.style.margin='0 0 2rem 0';
 	kk_koerner.innerHTML='-';
 	kk_koerner.style.padding='0.25rem 0';
 	kk_koerner.style.fontWeight='bold';
