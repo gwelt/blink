@@ -114,7 +114,13 @@ function kk_HTML(bauer) {
 			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
 			return c;
 		}
-		r.appendChild(cell('kk_cell_'+m.typ+'_typ','58%'));
+
+		let cell_anzahl = r.appendChild(cell('kk_cell_'+m.typ+'_anzahl','12%'));
+		cell_anzahl.style.textAlign='center';
+		cell_anzahl.style.fontWeight='bold';
+
+		let cell_typ = r.appendChild(cell('kk_cell_'+m.typ+'_typ','58%'));
+		cell_typ.style.textAlign='left';
 		
 		let cell_preis = r.appendChild(cell('kk_cell_'+m.typ+'_preis_container','30%'));
 		cell_preis.style.display='flex';
@@ -129,10 +135,6 @@ function kk_HTML(bauer) {
 			cell_preis_text.style.margin='0';
 			cell_preis_text.style.padding='0';
 			cell_preis.appendChild(cell_preis_text);
-
-		let cell_anzahl = r.appendChild(cell('kk_cell_'+m.typ+'_anzahl','12%'));
-		cell_anzahl.style.textAlign='center';
-		cell_anzahl.style.fontWeight='bold';
 
 		kk_marktplatz.appendChild(r);
 	});
