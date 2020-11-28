@@ -102,13 +102,16 @@ function kk_HTML(bauer) {
 	kk_png_korn_container.style.backgroundPosition='center';
 	kk_png_korn_container.style.backgroundRepeat='no-repeat';
 
+	kk_marktplatz.style.backgroundColor='#f0f0f0';
+	kk_marktplatz.style.padding='0.1rem 0.1rem';
+
 	maschinen_preisleistungsliste.forEach((m)=>{
 		let r=document.createElement('div');
 		r.id='kk_row_'+m.typ;
 		r.style.display='none';
 		r.style.justifyContent='space-between';
-		r.style.borderRadius='0';
-		r.style.backgroundColor='#f0f0f0';
+		//r.style.borderRadius='0';
+		//r.style.backgroundColor='#f0f0f0';
 		function cell(id,width) {
 			let c=document.createElement('div');
 			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
