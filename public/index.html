@@ -25,9 +25,7 @@
 			} else {
 				document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
 				document.getElementById('footer_image').style.display='block';
-				document.getElementById('footer_image').style.width=document.getElementById('cam_image_container').clientWidth*1.4+'px';
-				document.getElementById('footer_image').style.left=(document.getElementById('bigscreen').clientWidth/2)-(document.getElementById('cam_image_container').clientWidth*1.4/2)+'px';
-				document.getElementById('footer_image').style.bottom='-'+document.getElementById('footer_image').clientHeight/4+'px';
+				document.getElementById('footer_image').style.width=document.getElementById('bigscreen').clientWidth+'px';
 				document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight/2+'px';
 				//document.getElementById('bigscreen').style.backgroundColor='#c0ffc0';
 			}
@@ -99,7 +97,7 @@
 			}
 			
 			setTimeout(()=>{
-				if (((!h||h&&!h.account))&&confirm('Do you want to log in?')) {blink_login(true)};
+				if ((!h||h&&!h.account)) {blink_login(true)}; //&&confirm('Do you want to log in?')
 			},500);
 		}
 
@@ -273,8 +271,8 @@
 		
 			<div id=image_footer_height_space>&nbsp;</div>
 		</div>
-		<img id=footer_image src=gras.svg>
-		<audio id=audio controls><source src="chicken.wav" type="audio/wav"></audio>
 	</div>
+	<img id=footer_image src=gras.png>
+	<audio id=audio controls><source src="chicken.wav" type="audio/wav"></audio>
 </body>
 </html>
