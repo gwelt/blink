@@ -19,10 +19,10 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 			document.getElementById('kk_row_'+m.typ).style.display='flex';
 			document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
 			document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
-			let e_preis=document.getElementById('kk_cell_'+m.typ+'_preis');
-			if ((this.besitzt()>=preis/2)||(m.anzahl>0)) {e_preis.innerHTML='$'+preis}
-			if (this.besitzt()>=preis) {e_preis.onclick=()=>{m.kaufen(this)}; e_preis.style.cursor='pointer'; e_preis.style.backgroundColor='#0078D4'; e_preis.style.color='#FFF'; e_preis.style.border='0px solid #FFF';}
-			else {e_preis.style.cursor=''; e_preis.style.backgroundColor=''; e_preis.style.color='';}
+			document.getElementById('kk_cell_'+m.typ+'_preis').innerHTML=preis;
+			let e_preis=document.getElementById('kk_cell_'+m.typ+'_preis_container');
+			if (this.besitzt()>=preis) {e_preis.onclick=()=>{m.kaufen(this)}; e_preis.style.cursor='pointer'; e_preis.style.backgroundColor='#0078D4'; e_preis.style.color='#FFF';}
+			else {e_preis.style.cursor=''; e_preis.style.backgroundColor='#E0E0E0'; e_preis.style.color='#A0A0A0';}
 		}
 	});
 }
@@ -46,7 +46,7 @@ function Maschine(typ,anzahl) {
 Maschine.prototype.leistung = function() {return maschinen_verzeichnis(this.typ).leistung(this.anzahl)}
 Maschine.prototype.preis = function() {return maschinen_verzeichnis(this.typ).preis(this.anzahl)}
 Maschine.prototype.kaufen = function(besitzer) {if (besitzer.zahlt(this.preis())) {this.anzahl++; this.start(besitzer); return true;} else {return false}}
-Maschine.prototype.start = function(besitzer) {this.stopp(); this.prozess_id=setInterval(()=>{besitzer.erhaelt(this.leistung()/10)},100)}
+Maschine.prototype.start = function(besitzer) {this.stopp(); this.prozess_id=setInterval(()=>{besitzer.erhaelt(this.leistung()/5)},200)}
 Maschine.prototype.stopp = function() {if (this.prozess_id) {clearInterval(this.prozess_id)}}
 
 function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":()=>{},"leistung":()=>{}}}
@@ -71,13 +71,19 @@ function kk_HTML(bauer) {
 	let kk_koerner=document.createElement('div'); kk_koerner.id='kk_koerner'; kk.appendChild(kk_koerner);
 	let kk_produktion=document.createElement('div'); kk_produktion.id='kk_produktion'; kk.appendChild(kk_produktion);
 	let kk_png_klick_container=document.createElement('div'); kk.appendChild(kk_png_klick_container);
+	let kk_png_korn_container=document.createElement('div');
+	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
+
 	kk.style.position='relative';
-	//kk.style.backgroundColor='#fff';
-	//kk.style.margin='10rem 0 6rem 0';
+	kk.style.minHeight=(screen.height*0.8)+'px';
+	kk.style.padding='1rem 0 1rem 0';
+	//kk.style.backgroundColor='#f0f0f0';
+
 	kk_koerner.innerHTML='';
 	kk_koerner.style.fontSize='2rem';
 	kk_koerner.style.padding='1rem 0';
 	kk_koerner.style.fontWeight='bold';
+	
 	kk_produktion.innerHTML='';
 	kk_produktion.style.fontSize='0.75rem';
 	
@@ -89,9 +95,13 @@ function kk_HTML(bauer) {
 	kk_png_klick_container.style.backgroundPosition='55% center';
 	kk_png_klick_container.style.cursor='pointer';
 	kk_png_klick_container.style.WebkitTapHighlightColor='transparent';
-	
 	kk_png_klick_container.onclick=()=>{bauer.klickt()};
-	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
+
+	kk_png_korn_container.style.backgroundImage="url('kk_korn.png')";
+	kk_png_korn_container.style.backgroundSize='contain';
+	kk_png_korn_container.style.backgroundPosition='center';
+	kk_png_korn_container.style.backgroundRepeat='no-repeat';
+
 	maschinen_preisleistungsliste.forEach((m)=>{
 		let r=document.createElement('div');
 		r.id='kk_row_'+m.typ;
@@ -101,12 +111,29 @@ function kk_HTML(bauer) {
 		r.style.backgroundColor='#f0f0f0';
 		function cell(id,width) {
 			let c=document.createElement('div');
-			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.border='1px solid #f0f0f0'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
+			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
 			return c;
 		}
-		r.appendChild(cell('kk_cell_'+m.typ+'_typ','50%'));
-		r.appendChild(cell('kk_cell_'+m.typ+'_preis','32%'));
-		r.appendChild(cell('kk_cell_'+m.typ+'_anzahl','14%'));
+		r.appendChild(cell('kk_cell_'+m.typ+'_typ','58%'));
+		
+		let cell_preis = r.appendChild(cell('kk_cell_'+m.typ+'_preis_container','30%'));
+		cell_preis.style.display='flex';
+		cell_preis.style.borderRadius='0.2rem';
+	
+			let korn_png_div = kk_png_korn_container.cloneNode(true)
+			//korn_png_div.style.maxWidth='30px';
+			korn_png_div.style.width='25px';
+			cell_preis.appendChild(korn_png_div);
+	
+			let cell_preis_text = cell('kk_cell_'+m.typ+'_preis','100%');
+			cell_preis_text.style.margin='0';
+			cell_preis_text.style.padding='0';
+			cell_preis.appendChild(cell_preis_text);
+
+		let cell_anzahl = r.appendChild(cell('kk_cell_'+m.typ+'_anzahl','12%'));
+		cell_anzahl.style.textAlign='center';
+		cell_anzahl.style.fontWeight='bold';
+
 		kk_marktplatz.appendChild(r);
 	});
 }
