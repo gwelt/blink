@@ -18,16 +18,16 @@
 		function on_resize() {
 			document.getElementById('cam_image_container').style.height=document.getElementById('cam_image_container').clientWidth*0.5625+'px';
 			document.getElementById('vt0d').style.minHeight=document.getElementById('vt0d').clientWidth*0.5625+'px';
+			document.getElementById('screen').style.minHeight=(screen.height*0.9)+'px';
 			if (document.getElementById('bigscreen').clientWidth>800) {
 				document.getElementById('bigscreen').style.backgroundSize='0px';
 				document.getElementById('footer_image').style.display='none';
-				document.getElementById('image_footer_height_space').style.height='2rem';
+				document.getElementById('image_footer_height_space').display='none';
 			} else {
 				document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
 				document.getElementById('footer_image').style.display='block';
 				document.getElementById('footer_image').style.width=document.getElementById('bigscreen').clientWidth+'px';
-				document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight/2+'px';
-				//document.getElementById('bigscreen').style.backgroundColor='#c0ffc0';
+				document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight+'px';
 			}
 		}
 
@@ -266,11 +266,11 @@
 					<div class=videothumbnail><img id=vt2i class=videothumbnail_image></div><div id=vt2c class=videothumbnail_caption></div><div id=vt2o onclick=display(global_homescreen_and_videoevents,2); class=videothumbnail_overlay></div>
 				</div>
 			</div>
-
-			<div id=kornklicker style='margin:8rem 0 0rem 0'></div><script src="kornklicker.js"></script>
-		
-			<div id=image_footer_height_space>&nbsp;</div>
 		</div>
+		<div class=screen>
+			<div id=kornklicker style='margin:0rem 0 0rem 0'></div><script src="kornklicker.js"></script>
+		</div>
+		<div id=image_footer_height_space></div>
 	</div>
 	<img id=footer_image src=gras.png>
 	<audio id=audio controls><source src="chicken.wav" type="audio/wav"></audio>

@@ -72,12 +72,12 @@ function kk_HTML(bauer) {
 	let kk_produktion=document.createElement('div'); kk_produktion.id='kk_produktion'; kk.appendChild(kk_produktion);
 	let kk_png_klick_container=document.createElement('div'); kk.appendChild(kk_png_klick_container);
 	let kk_png_korn_container=document.createElement('div');
+	let kk_audio=document.createElement('AUDIO'); kk_audio.id='kk_audio'; kk.appendChild(kk_audio); kk_audio.src='klick.wav';
 	let kk_marktplatz=document.createElement('div'); kk_marktplatz.id='kk_marktplatz'; kk.appendChild(kk_marktplatz);
 
 	kk.style.position='relative';
 	kk.style.minHeight=(screen.height*0.8)+'px';
 	kk.style.padding='1rem 0 1rem 0';
-	//kk.style.backgroundColor='#f0f0f0';
 
 	kk_koerner.innerHTML='';
 	kk_koerner.style.fontSize='2rem';
@@ -95,7 +95,7 @@ function kk_HTML(bauer) {
 	kk_png_klick_container.style.backgroundPosition='55% center';
 	kk_png_klick_container.style.cursor='pointer';
 	kk_png_klick_container.style.WebkitTapHighlightColor='transparent';
-	kk_png_klick_container.onclick=()=>{bauer.klickt()};
+	kk_png_klick_container.onclick=()=>{bauer.klickt();kk_audio.play();};
 
 	kk_png_korn_container.style.backgroundImage="url('kk_korn.png')";
 	kk_png_korn_container.style.backgroundSize='contain';
