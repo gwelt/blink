@@ -151,14 +151,18 @@ Blink.prototype.GET_IMAGE = function (cam_id,callback) {
 	} else {this.write_log('>ERROR IMAGE/CAM NOT AVAILABLE.'); callback('{"error":"IMAGE/CAM NOT AVAILABLE."}');}
 }
 
-Blink.prototype.UPDATE_CAM = function (c,n,callback) {
-	let cam=c||(this.homescreen.cameras)?this.homescreen.cameras[0]:undefined;
-	let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
-	if (cam&&network) {
-	    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam.id+'/thumbnail','POST'),'',false,(r)=>{
-	     	this.write_log('>OK UPDATE_CAM '+cam.id+' @ '+network.id+' | last updated '+cam.updated_at);
-	    	callback(r);
-	    });
+Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
+	if (this.homescreen.cameras) {
+		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
+		if (cam_array_number==-1) {cam_array_number=0}
+		cam_id=this.homescreen.cameras[cam_array_number].id;
+		let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
+		if (network) {
+		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
+		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network.id);
+		    	callback(r);
+		    });
+		}
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
 }
 

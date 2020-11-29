@@ -50,7 +50,7 @@ app.use('(/blink)?/api', function(req,res) {
 			break;
 
 		case 'update_cam':
-			blink.UPDATE_CAM(undefined,undefined,(r)=>{
+			blink.UPDATE_CAM(req.body.cam_id,undefined,(r)=>{
 				res.set('Content-Type','application/json'); res.end(r);
 			});
 			break;

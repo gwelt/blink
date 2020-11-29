@@ -73,10 +73,25 @@
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
 					cvideo.pause();
-					let cam_array_number=0; // 0 always get's the latest image because blink.js sorts cameras-array by updated_at
+
+					let cam_array_number=0; // 0 get's the latest image because blink.js sorts cameras-array by updated_at
+					// try to find the cam of the image that is currently displayed (cjpg.cam_id)
+					if (cjpg.cam_id) {
+						cam_array_number=h.cameras.findIndex((c)=>cjpg.cam_id==c.id);
+						if (cam_array_number==-1) {cam_array_number=0}
+					}
+					cjpg.cam_id=h.cameras[cam_array_number].id; // save cam_id @ IMG-object
 					cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
 					cname.innerHTML=h.cameras[cam_array_number].name+' | '+Math.round((h.cameras[cam_array_number].signals.temp-32)*5/9)+'°C';
 					cdate.innerHTML=new Date(h.cameras[cam_array_number].updated_at).toLocaleString();
+
+					cname.ondblclick=()=>{
+						let next_cam_array_number=cam_array_number+1;
+						if (next_cam_array_number>=h.cameras.length) {next_cam_array_number=0}
+						cjpg.cam_id=h.cameras[next_cam_array_number].id;
+						display(global_homescreen_and_videoevents);
+					};
+
 					cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 					cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 					cvoverlay.style.top='100%';
@@ -86,7 +101,7 @@
 			// UPDATE-BUTTON
 			if (h&&h.cameras) {
 				bu.className='btn';
-				bu.onclick=()=>{blink_update_cam()};
+				bu.onclick=()=>{blink_update_cam(cjpg.cam_id)};
 			}
 
 			// VIDEO-THUMBNAILS
@@ -145,7 +160,7 @@
 				});
 			};
 		}
-		function blink_update_cam() {
+		function blink_update_cam(cam_id) {
 			let bu=document.getElementById('btn_update');
 			bu.blur();
 			bu.className='btn_disabled';
@@ -153,10 +168,10 @@
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			play_chicken_sound();
-			get('api','{"command":"update_cam"}',(r)=>{
+			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
-				log('waiting for 5 seconds...');
-				setTimeout(()=>{blink_get_index(true);},5000)
+				log('waiting for 6 seconds...');
+				setTimeout(()=>{blink_get_index(true)},6000)
 			});
 		}
 		function blink_capture_video() {
