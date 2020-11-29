@@ -17,7 +17,7 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.videoevents={};
 	this.lastupdate=undefined;
 	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
-	this.cache=new Cache(10);
+	this.cache=new Cache(25);
 	this.log=new Logger();
 	return this;
 }
@@ -99,6 +99,7 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined}; 
 			if (!this.is_errormessage(rj)) {
 				this.homescreen=rj;
+				if (this.homescreen.cameras) {this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))};
 		     	this.write_log('>OK GET_HOMESCREEN');
 			} else {this.homescreen={}}
 			callback(r);
@@ -131,9 +132,11 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
 }
 
-Blink.prototype.GET_IMAGE = function (cam,callback) {
-	let image=((this.homescreen.cameras)?this.homescreen.cameras[0].thumbnail+'.jpg':undefined);
-	if (image) {
+Blink.prototype.GET_IMAGE = function (cam_id,callback) {
+	if (this.homescreen.cameras) {
+		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
+		if (cam_array_number==-1) {cam_array_number=0}
+		let image=this.homescreen.cameras[cam_array_number].thumbnail+'.jpg';
 		let cached=this.cache.get(image);
 		if (cached) {
 		    this.write_log('>OK GET_IMAGE [FROM CACHE] '+image);

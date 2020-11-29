@@ -16,6 +16,7 @@ Bauer.prototype.aktualisiert_buchhaltung = function() {
 	this.maschinen.forEach((m)=>{
 		let preis=m.preis();
 		if ((m.anzahl>0)||(this.besitzt()>=preis/10)) {
+			document.getElementById('kk_marktplatz').style.display='block';
 			document.getElementById('kk_row_'+m.typ).style.display='flex';
 			document.getElementById('kk_cell_'+m.typ+'_typ').innerHTML=m.typ+' ('+maschinen_verzeichnis(m.typ).leistung(1)+'kps)';
 			document.getElementById('kk_cell_'+m.typ+'_anzahl').innerHTML=m.anzahl;
@@ -102,6 +103,7 @@ function kk_HTML(bauer) {
 	kk_png_korn_container.style.backgroundPosition='center';
 	kk_png_korn_container.style.backgroundRepeat='no-repeat';
 
+	kk_marktplatz.style.display='none';
 	kk_marktplatz.style.backgroundColor='#f0f0f0';
 	kk_marktplatz.style.padding='0.1rem 0.1rem';
 
@@ -110,8 +112,6 @@ function kk_HTML(bauer) {
 		r.id='kk_row_'+m.typ;
 		r.style.display='none';
 		r.style.justifyContent='space-between';
-		//r.style.borderRadius='0';
-		//r.style.backgroundColor='#f0f0f0';
 		function cell(id,width) {
 			let c=document.createElement('div');
 			c.id=id; c.style.backgroundColor=''; c.style.fontSize='0.75rem'; c.style.borderRadius='0'; c.style.margin='0.1rem'; c.style.padding='0.2rem'; c.style.textAlign='right'; c.style.overflow='hidden'; c.style.maxWidth=width;
@@ -130,7 +130,6 @@ function kk_HTML(bauer) {
 		cell_preis.style.borderRadius='0.2rem';
 	
 			let korn_png_div = kk_png_korn_container.cloneNode(true)
-			//korn_png_div.style.maxWidth='30px';
 			korn_png_div.style.width='25px';
 			cell_preis.appendChild(korn_png_div);
 	

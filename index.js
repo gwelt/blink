@@ -73,6 +73,15 @@ app.use('(/blink)?/api', function(req,res) {
 	}
 });
 
+app.use('(/blink)?/cam/:id?', function(req,res) {
+	blink.GET_IMAGE(req.params.id,(r)=>{
+		if (r) {
+			res.set('Content-Type','image/jpeg');
+			res.end(r,'binary');
+		} else {res.end('HELLO. THIS IS BLINK.\nI DON\'T SEE THIS CAM HERE.')}
+	});
+});
+
 app.use('(/blink)?/media/thumbnail/:media_id?', function(req,res) {
 	blink.GET_MEDIA_THUMBNAIL(req.params.media_id||undefined,(r)=>{
 		if (r) {

@@ -20,14 +20,19 @@
 			document.getElementById('vt0d').style.minHeight=document.getElementById('vt0d').clientWidth*0.5625+'px';
 			document.getElementById('screen').style.minHeight=(screen.height*0.9)+'px';
 			if (document.getElementById('bigscreen').clientWidth>800) {
-				document.getElementById('bigscreen').style.backgroundSize='0px';
-				document.getElementById('footer_image').style.display='none';
-				document.getElementById('image_footer_height_space').display='none';
+				try {
+					document.getElementById('bigscreen').style.backgroundSize='0px';
+					document.getElementById('footer_image').style.display='none';
+					document.getElementById('footer_image').style.display='none';
+					document.getElementById('image_footer_height_space').display='none';
+				} catch {()=>{}}
 			} else {
-				document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
-				document.getElementById('footer_image').style.display='block';
-				document.getElementById('footer_image').style.width=document.getElementById('bigscreen').clientWidth+'px';
-				document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight+'px';
+				try {
+					document.getElementById('bigscreen').style.backgroundSize=document.getElementById('cam_image_container').clientWidth*1.4+'px';
+					document.getElementById('footer_image').style.display='block';
+					document.getElementById('footer_image').style.width=document.getElementById('bigscreen').clientWidth+'px';
+					document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight+'px';
+				} catch {()=>{}}
 			}
 		}
 
@@ -68,14 +73,13 @@
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
 					cvideo.pause();
-					cjpg.src='cam.jpg?'+h.cameras[0].updated_at;
+					let cam_array_number=0; // 0 always get's the latest image because blink.js sorts cameras-array by updated_at
+					cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
+					cname.innerHTML=h.cameras[cam_array_number].name+' | '+Math.round((h.cameras[cam_array_number].signals.temp-32)*5/9)+'°C';
+					cdate.innerHTML=new Date(h.cameras[cam_array_number].updated_at).toLocaleString();
 					cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
-					
 					cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 					cvoverlay.style.top='100%';
-					
-					cname.innerHTML=h.cameras[0].name+' | '+Math.round((h.cameras[0].signals.temp-32)*5/9)+'°C';
-					cdate.innerHTML=new Date(h.cameras[0].updated_at).toLocaleString();
 				}
 			}
 
@@ -201,7 +205,7 @@
 
 		.bigscreen {height:100%;padding:0rem 1rem 1rem 1rem; border-radius:0; margin:0; background-repeat:no-repeat;background-size:0%;background-position:center top;background-image:url('bghead.svg') }
 		.screen {min-width:300px; max-width:420px; margin:auto; text-align:center;}
-		#footer_image {position:fixed; bottom:0; z-index:1;}
+		#footer_image {position:fixed; bottom:0; z-index:1; display:none;}
 
 		@media only screen and (max-width: 320px) {
 			.bigscreen {padding:0rem 0.6rem 1rem 0.6rem;}
