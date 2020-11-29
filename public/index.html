@@ -175,8 +175,8 @@
 				setTimeout(()=>{blink_get_index(true)},6000)
 			});
 		}
-		function blink_capture_video() {
-			get('api','{"command":"capture_video"}',(r)=>{
+		function blink_capture_video(cam_id) {
+			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
 			});			
 		}

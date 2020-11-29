@@ -56,7 +56,7 @@ app.use('(/blink)?/api', function(req,res) {
 			break;
 
 		case 'capture_video':
-			blink.CAPTURE_VIDEO(undefined,undefined,(r)=>{
+			blink.CAPTURE_VIDEO(req.body.cam_id,undefined,(r)=>{
 				res.set('Content-Type','application/json'); res.end(r);
 			});
 			break;
