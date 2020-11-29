@@ -53,9 +53,9 @@ Maschine.prototype.stopp = function() {if (this.prozess_id) {clearInterval(this.
 function maschinen_verzeichnis(typ) {return maschinen_preisleistungsliste.find(e=>e.typ==typ)||{"preis":()=>{},"leistung":()=>{}}}
 const maschinen_preisleistungsliste = [
 	{"typ":"Kueken","preis":(n)=>{return Math.round(Math.exp(n/6.6)*18)},"leistung":(n)=>{return n*0.1}},
-	{"typ":"Huhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Kueken').preis(25))},"leistung":(n)=>{return n*1}},
-	{"typ":"Doppelhuhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Huhn').preis(20))},"leistung":(n)=>{return n*2}},
-	{"typ":"Kornado","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Doppelhuhn').preis(25))},"leistung":(n)=>{return n*8.4}}
+	{"typ":"Zwerghuhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Kueken').preis(25))},"leistung":(n)=>{return n*1}},
+	{"typ":"Huhn","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Zwerghuhn').preis(20))},"leistung":(n)=>{return n*2}},
+	{"typ":"Kornado","preis":(n)=>{return Math.round(Math.exp(n/6.6)*maschinen_verzeichnis('Huhn').preis(25))},"leistung":(n)=>{return n*8.4}}
 ];
 
 
