@@ -64,7 +64,8 @@
 				cvideo.src='media/'+video_id;
 				//cvideo.preload='none';
 				cvideo.autoplay=true;
-				cname.innerHTML=video.device_name;
+				cname.innerHTML=video.device_name; //+' ('+video.device_id+')';
+				cjpg.cam_id=video.device_id;
 				cdate.innerHTML=new Date(video.created_at).toLocaleString();
 			} else {
 				// IMAGE
