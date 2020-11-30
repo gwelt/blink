@@ -25,6 +25,7 @@
 					document.getElementById('footer_image').style.display='none';
 					document.getElementById('footer_image').style.display='none';
 					document.getElementById('image_footer_height_space').display='none';
+					document.getElementById('cam_image_container').style.boxShadow='';
 				} catch {()=>{}}
 			} else {
 				try {
@@ -32,6 +33,7 @@
 					document.getElementById('footer_image').style.display='block';
 					document.getElementById('footer_image').style.width=document.getElementById('bigscreen').clientWidth+'px';
 					document.getElementById('image_footer_height_space').style.height=document.getElementById('footer_image').clientHeight+'px';
+					document.getElementById('cam_image_container').style.boxShadow='0px -15px 10px -10px #0d3800';
 				} catch {()=>{}}
 			}
 		}
