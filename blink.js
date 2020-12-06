@@ -160,7 +160,28 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		if (network) {
 		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
 		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network.id);
-		    	callback(r);
+				// look for command_id in r
+				let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
+				if (rj.id) {
+					// start polling after 2.5 seconds
+					let counter=10;	
+					setTimeout(()=>{
+						// poll for completion of command (GET_COMMAND_STATUS)
+						let interval=setInterval(()=>{
+							this.GET_COMMAND_STATUS(rj.network_id,rj.id,(s)=>{
+								let sj=undefined; try {sj=JSON.parse(s)} catch(e){s=undefined};
+								if ((sj.complete==true)||(counter<1)) {
+									clearInterval(interval);
+									// reply with command-status-reply (includes original command object)
+									callback(s);
+								}
+							})
+							counter--;
+						},1000);
+					},2500)
+				} else {
+					callback(r);
+				}
 		    });
 		}
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
@@ -214,6 +235,18 @@ Blink.prototype.GET_MEDIA_THUMBNAIL = function (t,callback) {
 		}
 
 	} else {this.write_log('>ERROR MEDIA_THUMBNAIL NOT AVAILABLE.'); callback('{"error":"MEDIA_THUMBNAIL NOT AVAILABLE."}');}
+}
+
+Blink.prototype.GET_COMMAND_STATUS = function (n_id,command_id,callback) {
+	if (this.homescreen.networks&&command_id) {
+		let network_id=n_id||(this.homescreen.networks)?this.homescreen.networks[0].id:undefined;
+		if (network_id) {
+		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/command/'+command_id,'GET'),'',false,(r)=>{
+		     	this.write_log('>OK COMMAND_STATUS '+command_id+' @ '+network_id);
+		    	callback(r);
+		    });
+		}
+	} else {this.write_log('>ERROR COMMAND_STATUS NOT AVAILABLE.'); callback('{"error":"COMMAND_STATUS NOT AVAILABLE."}');}
 }
 
 Blink.prototype.is_errormessage = function (o) {

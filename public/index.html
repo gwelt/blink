@@ -171,10 +171,10 @@
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			play_chicken_sound();
+			log('requesting new cam-thumbnail - this may take a few seconds...');
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
-				log('waiting for 6 seconds...');
-				setTimeout(()=>{blink_get_index(true)},6000)
+				blink_get_index(true);
 			});
 		}
 		function blink_capture_video(cam_id) {
