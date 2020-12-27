@@ -12,7 +12,8 @@
 
 		function go() {
 			on_resize();
-			blink_get_index();
+			setInterval(()=>{blink_get_index()},1000*60*5);
+			//blink_get_index();
 		}
 
 		function on_resize() {

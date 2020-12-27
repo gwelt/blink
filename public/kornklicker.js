@@ -125,7 +125,7 @@ function kk_HTML(bauer) {
 		let cell_typ = r.appendChild(cell('kk_cell_'+m.typ+'_typ','58%'));
 		cell_typ.style.textAlign='left';
 		
-		let cell_preis = r.appendChild(cell('kk_cell_'+m.typ+'_preis_container','30%'));
+		let cell_preis = r.appendChild(cell('kk_cell_'+m.typ+'_preis_container','35%'));
 		cell_preis.style.display='flex';
 		cell_preis.style.borderRadius='0.2rem';
 	
