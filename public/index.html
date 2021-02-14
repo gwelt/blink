@@ -129,9 +129,7 @@
 				get('api','{"command":"login"}',(r)=>{
 					log(r);
 					let rj=JSON.parse(r);
-					if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {
-						if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
-					}
+					if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
 				});
 			} else {
 				let email=prompt('Enter your email to connect this server to Blink.','')
@@ -140,8 +138,7 @@
 					if (pw) {
 						get('api','{"command":"login","email":"'+email+'","password":"'+pw+'"}',(r)=>{
 							log(r);
-							let rj=JSON.parse(r);
-							if (rj&&rj.client&&rj.client.verification_required&&rj.client.id) {blink_verify()} else {blink_get_index(true)}
+							blink_get_index(true);
 						});
 					};
 				};		
@@ -186,7 +183,8 @@
 		function blink_get_index(force) {
 			get('api','{"command":"get_index","force":'+(force?true:false)+'}',(r)=>{
 				log(r);
-				display(r);
+				let rj=JSON.parse(r);
+				if (rj.client_verification_required==true) {blink_verify()} else {display(r)};
 			});
 		}
 		function blink_get_log() {get('api','{"command":"get_log"}',(r)=>{log(r)})}
@@ -210,6 +208,7 @@
 			let audio=document.getElementById('audio');
 			let audiothek=['chicken.wav','chicken2.wav'];
 			audio.src=audiothek[number||rand(0,audiothek.length-1)];
+			audio.volume=0.5;
 			audio.play();
 		}	
 

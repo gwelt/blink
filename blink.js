@@ -12,10 +12,11 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.client_id=client_id;
 	this.authtoken=authtoken;
 	this.region_tier=region_tier;
-	
+
 	this.homescreen={};
 	this.videoevents={};
 	this.lastupdate=undefined;
+	this.client_verification_required=undefined;
 	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
 	this.cache=new Cache(25);
 	this.log=new Logger();
@@ -25,18 +26,19 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 Blink.prototype.LOGIN = function (callback) {
 	if (this.email&&this.password) {
 	    let data = {"email":this.email,"password":this.password,"unique_id":this.unique_id};
-		this.request(this.get_blinkRequestOptions('/api/v4/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
+		this.request(this.get_blinkRequestOptions('/api/v5/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
 			if (!this.is_errormessage(rj)) {
-				this.account_id=rj.account?rj.account.id:undefined;
-				this.client_id=rj.client?rj.client.id:undefined;
-				this.authtoken=rj.authtoken?rj.authtoken.authtoken:undefined;
-				this.region_tier=rj.region?rj.region.tier:undefined;
+				this.account_id=rj.account?rj.account.account_id:undefined;
+				this.client_id=rj.account?rj.account.client_id:undefined;
+				this.authtoken=rj.auth?rj.auth.token:undefined;
+				this.region_tier=rj.account?rj.account.tier:undefined;
+				this.client_verification_required=rj.account?rj.account.client_verification_required:undefined;
 			    this.write_log('>OK LOGIN '+this.email+' | ACCOUNT_ID '+this.account_id+' | CLIENT_ID '+this.client_id+' | AUTHTOKEN '+this.authtoken+' | REGION_TIER '+this.region_tier);
 			    this.write_log(r);
-			    if (rj.client.verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
+			    if (this.client_verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
 			    // filter authtoken
-			    if (rj.authtoken) {rj.authtoken=undefined}
+			    if (rj.auth.token) {rj.auth.token=undefined}
 			} else {this.email=undefined;this.password=undefined;}
 			try {r=JSON.stringify(rj)} catch(e){};
 		    callback(r);
@@ -49,6 +51,9 @@ Blink.prototype.VERIFY = function (pin,callback) {
 	    let data = {"pin":pin};
 		this.request(this.get_blinkRequestOptions('/api/v4/account/'+this.account_id+'/client/'+this.client_id+'/pin/verify','POST',{'Content-Type':'application/json','TOKEN_AUTH':this.authtoken}),JSON.stringify(data),false,(r)=>{
 		    this.write_log('>OK VERIFY '+r);
+		    let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
+		    if (rj.valid==true) {this.client_verification_required=false}
+		    this.cache=new Cache(25); // reset cache
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED.'); callback('{"error":"ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED."}');}
@@ -72,7 +77,7 @@ Blink.prototype.GET_INDEX = function (callback,force_update,force_cache) {
     if ( force_cache || (cache_age<(this.accepted_age_of_data_in_seconds||cache_age)&&!force_update) ) {
 		let homescreen_JSON=(this.homescreen?JSON.stringify(this.homescreen):'{}');
 		let videoevents_JSON=(this.videoevents?JSON.stringify(this.videoevents):'{}');
-		let r='{"lastupdate":"'+this.lastupdate+'","homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
+		let r='{"lastupdate":"'+this.lastupdate+'","client_verification_required":'+this.client_verification_required+',"homescreen":'+homescreen_JSON+',"videoevents":'+videoevents_JSON+'}';
 		this.write_log('>OK GET_INDEX [FROM CACHE] VALID FOR '+((this.accepted_age_of_data_in_seconds||cache_age)-cache_age).toFixed(0)+' SECONDS');
 		callback(r);    	
     } else {

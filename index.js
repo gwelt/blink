@@ -149,7 +149,7 @@ function blink_init() {
 					console.log('Ok. http://localhost:'+port+' is now linked to your Blink-account.');
 					blink.GET_INDEX(()=>{});
 					// if verification is required, prompt for PIN (will automatically be sent from Blink by email)
-					if (r&&r.client&&r.client.verification_required&&r.client.id) {
+					if (blink.client_verification_required) {
 						console.log('Sorry. Blink requests verification. Please check you email for the required PIN.')
 						prompt('> PIN       : ',undefined,false,(pin)=>{
 							blink.VERIFY(pin,(r)=>{
