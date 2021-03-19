@@ -151,7 +151,7 @@
 					log(r);
 					blink_get_index(true);
 				});
-			};
+			} else {blink_get_index(true)} // it might have resolved although no pin was entered (see mailhook-function)
 		}
 		function blink_logout() {
 			if (confirm('This will disconnect this server from Blink.\nDo you really want to do this?')) {
