@@ -145,13 +145,13 @@
 			};
 		}
 		function blink_verify() {
-			let pin=prompt('Blink requests verification.\nPlease check your email for the required PIN.','');
+			let pin=prompt('Blink requests verification.\nPlease check your email for the required PIN.\nIf you feel lucky, click cancel and then just wait for 15 seconds.','');
 			if (pin) {
 				get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
 					log(r);
 					blink_get_index(true);
 				});
-			} else {blink_get_index(true)} // it might have resolved although no pin was entered (see mailhook-function)
+			} else {setTimeout(()=>{blink_get_index(true)},15000)} // it might have resolved although no pin was entered (see mailhook-function)
 		}
 		function blink_logout() {
 			if (confirm('This will disconnect this server from Blink.\nDo you really want to do this?')) {
