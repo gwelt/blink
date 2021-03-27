@@ -18,8 +18,8 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.lastupdate=undefined;
 	this.client_verification_required=undefined;
 	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
-	this.cache=new Cache(25);
-	this.log=new Logger();
+	this.cache=new Cache(50);
+	this.log=new Logger(50);
 	return this;
 }
 
@@ -127,7 +127,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 				  if (keyA < keyB) return 1;
 				  if (keyA > keyB) return -1;
 				  return 0;
-				}).slice(0,3);
+				}).slice(0,6);
 
 				this.videoevents=rj;
 				this.write_log('>OK GET_VIDEO_EVENTS');
