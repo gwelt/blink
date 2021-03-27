@@ -210,9 +210,10 @@
 			play_chicken_sound();
 			log('requesting video - this may take a while and will be done in the background...');
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
-				alert('Recording started.\nUpdate the page in about 30 seconds or wait for auto-refresh to see the new video in the list.');
 				log(r);
-				blink_get_index(true);
+				let rj=JSON.parse(r);
+				setTimeout(()=>{blink_get_index(true)},25000);
+				alert('Recording started. (#'+rj.id+')\nThis page will refresh in 25 seconds.');
 			});			
 		}
 		function blink_get_index(force) {
