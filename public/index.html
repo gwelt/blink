@@ -40,6 +40,14 @@
 		}
 
 		let global_homescreen_and_videoevents=undefined;
+
+		function switch_cam() {
+			let cname=document.getElementById('cam_name');
+			var doubleClickEvent = document.createEvent('MouseEvents');
+			doubleClickEvent.initEvent('dblclick', true, true);
+			cname.dispatchEvent(doubleClickEvent);
+		};
+
 		function display(homescreen_and_videoevents,video_id) {
 			global_homescreen_and_videoevents=homescreen_and_videoevents;
 			let hv=homescreen_and_videoevents?JSON.parse(homescreen_and_videoevents):undefined;
@@ -51,6 +59,8 @@
 			let cname=document.getElementById('cam_name');
 			let cdate=document.getElementById('cam_date');
 			let bu=document.getElementById('btn_update');
+			let bu_capturevideo=document.getElementById('btn_capturevideo');
+			let bu_switchcam=document.getElementById('btn_switchcam');
 			
 			// VIDEO
 			// hack for taking video_id from media-array, if given video_id is within reasonable range (0, 1 or 2 for example)
@@ -106,6 +116,9 @@
 			if (h&&h.cameras) {
 				bu.className='btn';
 				bu.onclick=()=>{blink_update_cam(cjpg.cam_id)};
+				bu_capturevideo.className='btn';
+				bu_capturevideo.onclick=()=>{blink_capture_video(cjpg.cam_id)};
+				bu_switchcam.className='btn';
 			}
 
 			// VIDEO-THUMBNAILS
@@ -166,6 +179,12 @@
 			bu.blur();
 			bu.className='btn_disabled';
 			bu.onclick=undefined;				
+			
+			let bu_capturevideo=document.getElementById('btn_capturevideo');
+			bu_capturevideo.blur();
+			bu_capturevideo.className='btn_disabled';
+			bu_capturevideo.onclick=undefined;				
+
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			play_chicken_sound();
@@ -176,8 +195,24 @@
 			});
 		}
 		function blink_capture_video(cam_id) {
+			let bu=document.getElementById('btn_update');
+			bu.blur();
+			bu.className='btn_disabled';
+			bu.onclick=undefined;				
+			
+			let bu_capturevideo=document.getElementById('btn_capturevideo');
+			bu_capturevideo.blur();
+			bu_capturevideo.className='btn_disabled';
+			bu_capturevideo.onclick=undefined;				
+
+			let cvoverlay=document.getElementById('cam_image_overlay');
+			cvoverlay.style.top='0px';
+			play_chicken_sound();
+			log('requesting video - this may take a while and will be done in the background...');
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
+				alert('Recoding started.\nUpdate the page in about 30 seconds or wait for auto-refresh to see the new video in the list.');
 				log(r);
+				blink_get_index(true);
 			});			
 		}
 		function blink_get_index(force) {
@@ -260,9 +295,10 @@
 
 		a {color:#000; _text-decoration:none;}
 		a:hover {color:#0078D4;}
-		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;padding:0.2rem 0rem;margin:0.2rem 0 0.2rem 0;}
+		.btn, .btn_disabled {font-size: 0.9rem; width:30%; padding:0.2rem 0rem;margin:0.2rem 0rem 0.2rem 0;}
+		.btn {border: 2px solid #0078D4;background-color:#0078D4;color:#FFF;cursor:pointer;}
 		/*.btn:hover {background-color:#0068C4;}*/
-		.btn_disabled {border: 2px solid #e0e0e0;background-color:#e0e0e0;color:#d0d0d0;padding:0.2rem 0rem;margin:0.2rem 0 0.2rem 0;}
+		.btn_disabled {border: 2px solid #e0e0e0;background-color:#e0e0e0;color:#d0d0d0;}
 
 	</style>
 </head>
@@ -276,7 +312,17 @@
 			</div>
 			<div id=cam_name class=cam_info>&nbsp;</div>
 			<div id=cam_date class=cam_info>&nbsp;</div>
-			<button id=btn_update class=btn_disabled onclick=blink_update_cam()>update</button>
+			
+
+			<div style="width: 100%; margin-top:0.8rem; display: flex; justify-content: space-between;">
+				<!--
+				<button class="word btn_mini_off" style="flex: 1 1 auto; border-radius: 0.4rem 0px 0px 0.4rem;">A &gt; B</button><button class="word btn_mini_on" style="flex: 1 1 auto; border-radius: 0px;">A|B&gt;B|A</button><button class="word btn_mini_off" style="flex: 1 1 auto; border-radius: 0px 0.4rem 0.4rem 0px;">B &gt; A</button></div>
+				-->
+				<button id=btn_update class=btn_disabled onclick=blink_update_cam()>update cam</button>
+				<button id=btn_capturevideo class=btn_disabled onclick=blink_capture_video()>capture video</button>
+				<button id=btn_switchcam class=btn_disabled onclick=switch_cam();this.blur()>switch cam</button>
+			</div>
+
 			<div id=cam_videothumbnails_bar>
 				<div id=vt0d class=videothumbnail_container>
 					<div class=videothumbnail><img id=vt0i class=videothumbnail_image></div><div id=vt0c class=videothumbnail_caption></div><div id=vt0o onclick=display(global_homescreen_and_videoevents,0); class=videothumbnail_overlay></div>
