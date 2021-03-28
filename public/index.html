@@ -191,7 +191,8 @@
 			log('requesting new cam-thumbnail - this may take a few seconds...');
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
-				blink_get_index(true);
+				let rj=JSON.parse(r);
+				blink_track_command_status(cam_id,rj.id,1000);
 			});
 		}
 		function blink_capture_video(cam_id) {
@@ -212,9 +213,30 @@
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
 				let rj=JSON.parse(r);
-				setTimeout(()=>{blink_get_index(true)},25000);
-				alert('Recording started. (#'+rj.id+')\nThis page will refresh in 25 seconds.');
+				blink_track_command_status(cam_id,rj.id,5000);
 			});			
+		}
+		function blink_track_command_status(cam_id,command_id,interval_delay) {
+			let tracking_interval = setInterval(()=>{
+				blink_get_command_status(cam_id,command_id,(r)=>{
+					let rj=JSON.parse(r);
+					/*
+					{"complete":true,"status":1,"status_msg":"Command failed to complete","status_code":909,"commands":[{"id":80221158,"created_at":"2021-03-28T11:09:11+00:00","updated_at":"2021-03-28T11:09:14+00:00","execute_time":"2021-03-28T11:09:11+00:00","command":"clip","state_stage":"sm","stage_rest":"2021-03-28T11:09:11+00:00","stage_cs_db":"2021-03-28T11:09:11+00:00","stage_cs_sent":"2021-03-28T11:09:11+00:00","stage_sm":"2021-03-28T11:09:11+00:00","stage_dev":null,"stage_is":null,"stage_lv":null,"stage_vs":null,"state_condition":"error","sm_ack":1,"lfr_ack":1,"sequence":3816,"attempts":0,"transaction":"M-KOkwFPo-YXdQCK","player_transaction":"GCTOc4IRtvqF88L2","server":null,"duration":null,"by_whom":" - ","diagnostic":false,"debug":"{\"none\":[130773,2,3816,0,0,0,0,0]}","opts_1":0,"target":null,"target_id":null,"parent_command_id":null,"camera_id":142553,"siren_id":null,"firmware_id":null,"network_id":130773,"account_id":114085,"sync_module_id":131291}],"media_id":null}
+					*/
+					if (rj.complete) {
+						clearInterval(tracking_interval);
+						log('COMMAND '+command_id+' COMPLETED: '+rj.status+' | '+rj.status_msg);
+						if (rj.status!==0) {alert('#'+command_id+'\n'+rj.status_msg)};
+						if (rj.complete) {blink_get_index(true)};
+					};
+				});
+			},interval_delay)
+		}
+		function blink_get_command_status(cam_id,command_id,callback) {
+			get('api','{"command":"get_command_status","cam_id":"'+cam_id+'","command_id":"'+command_id+'"}',(r)=>{
+				log(r);
+				callback(r);
+			});						
 		}
 		function blink_get_index(force) {
 			get('api','{"command":"get_index","force":'+(force?true:false)+'}',(r)=>{
@@ -244,7 +266,7 @@
 			let audio=document.getElementById('audio');
 			let audiothek=['chicken.wav','chicken2.wav'];
 			audio.src=audiothek[number||rand(0,audiothek.length-1)];
-			audio.volume=0.5;
+			audio.volume=0.1;
 			audio.play();
 		}	
 

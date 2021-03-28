@@ -61,6 +61,12 @@ app.use('(/blink)?/api', function(req,res) {
 			});
 			break;
 
+		case 'get_command_status':
+			blink.GET_COMMAND_STATUS(req.body.cam_id,req.body.command_id,(r)=>{
+				res.set('Content-Type','application/json'); res.end(r);
+			});
+			break;
+
 		case 'get_log':
 			res.set('Content-Type','text/plain');
 			res.end(blink.log.read());
