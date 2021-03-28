@@ -192,7 +192,7 @@
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
 				let rj=JSON.parse(r);
-				blink_track_command_status(cam_id,rj.id,1000);
+				blink_track_command_status(cam_id,rj.id,1000,()=>{});
 			});
 		}
 		function blink_capture_video(cam_id) {
@@ -213,10 +213,10 @@
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
 				let rj=JSON.parse(r);
-				blink_track_command_status(cam_id,rj.id,5000);
+				blink_track_command_status(cam_id,rj.id,5000,()=>{display(global_homescreen_and_videoevents,0)});
 			});			
 		}
-		function blink_track_command_status(cam_id,command_id,interval_delay) {
+		function blink_track_command_status(cam_id,command_id,interval_delay,callback) {
 			let counter=0;
 			let tracking_interval = setInterval(()=>{
 				blink_get_command_status(cam_id,command_id,(r)=>{
@@ -229,8 +229,11 @@
 						clearInterval(tracking_interval);
 						if (command_id) {
 							log('COMMAND #'+command_id+' COMPLETED: '+counter+' loops | '+rj.status+' | '+rj.status_msg);
-							if (rj.status!==0) {alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+'\nCheer up! Just try again!')};
-							if (rj.complete) {blink_get_index(true)};
+							if (rj.status!==0) {
+								alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+'\nCheer up! Just try again!');
+							};
+							blink_get_index(true);
+							setTimeout(()=>{callback()},1000);
 						}
 					};
 				});
