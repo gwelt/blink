@@ -217,17 +217,21 @@
 			});			
 		}
 		function blink_track_command_status(cam_id,command_id,interval_delay) {
+			let counter=0;
 			let tracking_interval = setInterval(()=>{
 				blink_get_command_status(cam_id,command_id,(r)=>{
+					counter++;
 					let rj=JSON.parse(r);
 					/*
 					{"complete":true,"status":1,"status_msg":"Command failed to complete","status_code":909,"commands":[{"id":80221158,"created_at":"2021-03-28T11:09:11+00:00","updated_at":"2021-03-28T11:09:14+00:00","execute_time":"2021-03-28T11:09:11+00:00","command":"clip","state_stage":"sm","stage_rest":"2021-03-28T11:09:11+00:00","stage_cs_db":"2021-03-28T11:09:11+00:00","stage_cs_sent":"2021-03-28T11:09:11+00:00","stage_sm":"2021-03-28T11:09:11+00:00","stage_dev":null,"stage_is":null,"stage_lv":null,"stage_vs":null,"state_condition":"error","sm_ack":1,"lfr_ack":1,"sequence":3816,"attempts":0,"transaction":"M-KOkwFPo-YXdQCK","player_transaction":"GCTOc4IRtvqF88L2","server":null,"duration":null,"by_whom":" - ","diagnostic":false,"debug":"{\"none\":[130773,2,3816,0,0,0,0,0]}","opts_1":0,"target":null,"target_id":null,"parent_command_id":null,"camera_id":142553,"siren_id":null,"firmware_id":null,"network_id":130773,"account_id":114085,"sync_module_id":131291}],"media_id":null}
 					*/
-					if (rj.complete) {
+					if (rj.complete || counter>8) {
 						clearInterval(tracking_interval);
-						log('COMMAND '+command_id+' COMPLETED: '+rj.status+' | '+rj.status_msg);
-						if (rj.status!==0) {alert('#'+command_id+'\n'+rj.status_msg)};
-						if (rj.complete) {blink_get_index(true)};
+						if (command_id) {
+							log('COMMAND #'+command_id+' COMPLETED: '+counter+' loops | '+rj.status+' | '+rj.status_msg);
+							if (rj.status!==0) {alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+'\nCheer up! Just try again!')};
+							if (rj.complete) {blink_get_index(true)};
+						}
 					};
 				});
 			},interval_delay)
