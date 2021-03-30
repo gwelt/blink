@@ -80,7 +80,18 @@
 				cvideo.autoplay=true;
 				cname.innerHTML=video.device_name; //+' ('+video.device_id+')';
 				cjpg.cam_id=video.device_id;
-				cdate.innerHTML=new Date(video.created_at).toLocaleString();
+
+				let cam_array_number=0; // 0 get's the latest image because blink.js sorts cameras-array by updated_at
+				// try to find the cam of the image that is currently displayed (cjpg.cam_id)
+				if (cjpg.cam_id) {
+					cam_array_number=h.cameras.findIndex((c)=>cjpg.cam_id==c.id);
+					if (cam_array_number==-1) {cam_array_number=0}
+				}
+				cjpg.cam_id=h.cameras[cam_array_number].id; // save cam_id @ IMG-object
+				cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
+				cname.innerHTML=h.cameras[cam_array_number].name;
+				let status='<span class=record>record</span>';
+				cdate.innerHTML='<span class=info>'+new Date(video.created_at).toLocaleString()+'</span>'+status;
 			} else {
 				// IMAGE
 				// else display current thumbnail of first camera
@@ -97,10 +108,12 @@
 					}
 					cjpg.cam_id=h.cameras[cam_array_number].id; // save cam_id @ IMG-object
 					cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
-					cname.innerHTML=h.cameras[cam_array_number].name+' | '+Math.round((h.cameras[cam_array_number].signals.temp-32)*5/9)+'°C';
+					let temp=Math.round((h.cameras[cam_array_number].signals.temp-32)*5/9)+'°C';
+					cname.innerHTML=h.cameras[cam_array_number].name;
 					let status='';
-					if (h.cameras[cam_array_number].status!=='done') {status='<span class=warning>'+h.cameras[cam_array_number].status+'</span>';}
-					cdate.innerHTML=new Date(h.cameras[cam_array_number].updated_at).toLocaleString()+status;
+					if (h.cameras[cam_array_number].status=='done') {status='<span class=status>online</span>';}
+					else {status='<span class=warning>'+h.cameras[cam_array_number].status+'</span>';}
+					cdate.innerHTML='<span class=info>'+new Date(h.cameras[cam_array_number].updated_at).toLocaleString()+' &nbsp;|&nbsp; '+temp+'</span>'+status;
 
 					cname.ondblclick=()=>{
 						let next_cam_array_number=cam_array_number+1;
@@ -311,8 +324,11 @@
 		#cam_jpg {position:relative; display:none; width:100%; cursor:pointer; transition:0.2s}
 		#cam_video {position:relative; display:none}
 		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 0.5s;height:100%;z-index:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
-		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;margin:0rem 0 0.2rem 0;padding:0rem 0.2rem;}
+		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;padding:0rem 0.2rem;}
+		.info {padding: 0.1rem 0rem; nocolor:#fff; nobackground-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
+		.status {margin-left:0.4rem; padding: 0.1rem 0.25rem; color:#fff; background-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
 		.warning {margin-left:0.4rem; padding: 0.1rem 0.25rem; color:#fff; background-color:#a90000; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
+		.record {margin-left:0.4rem; padding: 0.1rem 0.25rem; color:#fff; background-color:#c0c0c0; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
 		
 		.cam_videothumbnails_bar {display:flex;justify-content:space-between;padding:1rem 0 0rem 0;}
 		.videothumbnail_container {position:relative;overflow:hidden;width:30%;background-color:#f0f0f0;}
