@@ -104,7 +104,7 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined}; 
 			if (!this.is_errormessage(rj)) {
 				this.homescreen=rj;
-				if (this.homescreen.cameras) {this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))};
+				if (this.homescreen && this.homescreen.cameras) {this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))};
 		     	this.write_log('>OK GET_HOMESCREEN');
 			} else {this.homescreen={}}
 			callback(r);
