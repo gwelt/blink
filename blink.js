@@ -24,7 +24,7 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 }
 
 Blink.prototype.LOGIN = function (callback) {
-	if (this.email&&this.password) {
+	if (this.email&&this.password&&this.authtoken==undefined) {
 	    let data = {"email":this.email,"password":this.password,"unique_id":this.unique_id};
 		this.request(this.get_blinkRequestOptions('/api/v5/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
@@ -43,7 +43,13 @@ Blink.prototype.LOGIN = function (callback) {
 			try {r=JSON.stringify(rj)} catch(e){};
 		    callback(r);
 		});
-	} else {this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');}
+	} else {
+		if (this.authtoken!==undefined) {
+			this.write_log('>ALREADY LOGGED IN.'); callback('{"message":"ALREADY LOGGED IN."}');
+		} else {
+			this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
+		}
+	}
 }
 
 Blink.prototype.VERIFY = function (pin,callback) {
@@ -65,6 +71,7 @@ Blink.prototype.LOGOUT = function (callback) {
 		    this.write_log('>OK LOGOUT '+r);
 			this.email=undefined;
 			this.password=undefined;
+			this.authtoken=undefined;
 			callback(r);
 		});
 	} else {this.write_log('>ERROR ACCOUNT_ID AND CLIENT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID AND CLIENT_ID REQUIRED."}');}
