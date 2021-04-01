@@ -91,7 +91,7 @@
 				cname.innerHTML=video.device_name; //+' ('+video.device_id+')';
 				cjpg.cam_id=video.device_id;
 				show_cam();
-				let status='<span class=record>record</span>';
+				let status='<span class=record>on tape</span>';
 				cdate.innerHTML='<span class=info>'+new Date(video.created_at).toLocaleString()+'</span>'+status;
 			} else {
 				// IMAGE
@@ -192,7 +192,8 @@
 			log('requesting new cam-thumbnail - this may take a few seconds...');
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
-				let rj=JSON.parse(r);
+				let rj={};
+				try {rj=JSON.parse(r)} catch {()=>{}}
 				blink_track_command_status(cam_id,rj.id,1000,()=>{});
 			});
 		}
@@ -213,29 +214,38 @@
 			log('requesting video - this may take a while and will be done in the background...');
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
-				let rj=JSON.parse(r);
+				let rj={};
+				try {rj=JSON.parse(r)} catch {()=>{}}
 				blink_track_command_status(cam_id,rj.id,5000,(status)=>{if (status==0) {display(global_homescreen_and_videoevents,0)}});
 			});			
 		}
 		function blink_track_command_status(cam_id,command_id,interval_delay,callback) {
-			let counter=0;
-			let tracking_interval = setInterval(()=>{
-				blink_get_command_status(cam_id,command_id,(r)=>{
-					counter++;
-					let rj=JSON.parse(r);
-					if (rj.complete || counter>8) {
-						clearInterval(tracking_interval);
-						if (command_id) {
-							log('COMMAND #'+command_id+' COMPLETED: '+counter+' loops | '+rj.status+' | '+rj.status_msg);
-							if (rj.status!==0) {
-								alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!');
-							};
-							blink_get_index(true);
-							setTimeout(()=>{callback(rj.status)},1000);
-						}
-					};
-				});
-			},interval_delay)
+			let max_count=8;
+			if (command_id) {
+				let counter=0;
+				let tracking_interval = setInterval(()=>{
+					blink_get_command_status(cam_id,command_id,(r)=>{
+						counter++;
+						let rj=JSON.parse(r);
+						if (rj.complete || counter>max_count) {
+							clearInterval(tracking_interval);
+							if (command_id) {
+								log('COMMAND #'+command_id+' COMPLETED: '+counter+' loops | '+rj.status+' | '+rj.status_msg);
+								if (rj.status!==0) {
+									alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!');
+								}
+								else if (counter>max_count) {
+									alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem did not answer in a reasonable amount of time.\nPlease try again!');
+								};
+								blink_get_index(true);
+								setTimeout(()=>{callback(rj.status)},1000);
+							}
+						};
+					});
+				},interval_delay)
+			} else {
+				alert('Oops. Something went wrong.\nSystem did not assign an ID to your command.\nPlease try again!');
+			}
 		}
 		function blink_get_command_status(cam_id,command_id,callback) {
 			get('api','{"command":"get_command_status","cam_id":"'+cam_id+'","command_id":"'+command_id+'"}',(r)=>{

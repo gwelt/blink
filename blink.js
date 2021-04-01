@@ -173,30 +173,6 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
 		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network.id);
 		     	callback(r);
-/*
-				// look for command_id in r
-				let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
-				if (rj.id) {
-					// start polling after 2.5 seconds
-					let counter=10;	
-					setTimeout(()=>{
-						// poll for completion of command (GET_COMMAND_STATUS)
-						let interval=setInterval(()=>{
-							this.GET_COMMAND_STATUS(rj.network_id,rj.id,(s)=>{
-								let sj=undefined; try {sj=JSON.parse(s)} catch(e){s=undefined};
-								if ((sj.complete==true)||(counter<1)) {
-									clearInterval(interval);
-									// reply with command-status-reply (includes original command object)
-									callback(s);
-								}
-							})
-							counter--;
-						},1000);
-					},2500)
-				} else {
-					callback(r);
-				}
-*/
 		    });
 		}
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
