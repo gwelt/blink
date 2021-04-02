@@ -87,6 +87,43 @@
 			}
 		}
 
+		function play_chicken_sound(number) {
+			let audio=document.getElementById('audio');
+			let audiothek=['chicken.wav','chicken2.wav'];
+			audio.src=audiothek[number||rand(0,audiothek.length-1)];
+			audio.volume=0.1;
+			audio.play();
+		}	
+
+		var timer=undefined;
+		function ticker(t,d) {
+			clearTimeout(timer);
+			if (t) {
+				let o=document.getElementById('cam_image_overlay_text');
+				let l=o.innerHTML.length;
+				if (o.innerHTML==t.substr(0,l)) {
+					let delay=d||20+Math.random()*100;
+					timer = setTimeout(()=>{
+						o.style.display='block';
+						o.innerHTML=t.substr(0,++l);
+						if (l==t.length) {ticker(t,2000)}
+						else if (l<t.length) {ticker(t)} //else {o.innerHTML='';o.style.display='none';}
+					},delay);
+				} else if ( (o.innerHTML!==t.substr(0,l))||l==0) {
+					o.innerHTML='';
+					ticker(t);				
+				}			
+			}
+		}
+
+		function please_stand_by() {
+			capture_buttons_active(false);
+			let cvoverlay=document.getElementById('cam_image_overlay');
+			cvoverlay.style.top='0px';
+			ticker('connecting'); //new Date().toString()
+			play_chicken_sound();
+		}
+
 		function display(homescreen_and_videoevents,video_id) {
 			if (homescreen_and_videoevents!==undefined) {global_homescreen_and_videoevents=homescreen_and_videoevents};
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
@@ -153,7 +190,8 @@
 			if (just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
 				get('api','{"command":"login"}',(r)=>{
 					log(r);
-					let rj=JSON.parse(r);
+					let rj={};
+					try {rj=JSON.parse(r)} catch {(e)=>{alert('Sorry. An error occured: '+e)}}
 					if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
 				});
 			} else {
@@ -187,10 +225,7 @@
 			};
 		}
 		function blink_update_cam(cam_id) {
-			capture_buttons_active(false);
-			let cvoverlay=document.getElementById('cam_image_overlay');
-			cvoverlay.style.top='0px';
-			play_chicken_sound();
+			please_stand_by();
 			log('requesting new cam-thumbnail - this may take a few seconds...');
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
@@ -200,10 +235,7 @@
 			});
 		}
 		function blink_capture_video(cam_id) {
-			capture_buttons_active(false);
-			let cvoverlay=document.getElementById('cam_image_overlay');
-			cvoverlay.style.top='0px';
-			play_chicken_sound();
+			please_stand_by();
 			log('requesting video - this may take a while and will be done in the background...');
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
@@ -218,8 +250,11 @@
 				let counter=0;
 				let tracking_interval = setInterval(()=>{
 					blink_get_command_status(cam_id,command_id,(r)=>{
+						ticker(' ');
 						counter++;
-						let rj=JSON.parse(r);
+						let rj={};
+						try {rj=JSON.parse(r)} catch {()=>{}}
+						if (rj.commands[0]) {ticker(rj.commands[0].state_condition)};
 						if (rj.complete || counter>max_count) {
 							clearInterval(tracking_interval);
 							if (command_id) {
@@ -250,7 +285,8 @@
 		function blink_get_index(force) {
 			get('api','{"command":"get_index","force":'+(force?true:false)+'}',(r)=>{
 				log(r);
-				let rj=JSON.parse(r);
+				let rj={};
+				try {rj=JSON.parse(r)} catch {(e)=>{alert('Sorry. Could not update. Try again!\n'+e)}}
 				if (rj.client_verification_required==true) {blink_verify()} else {display(r)};
 			});
 		}
@@ -271,14 +307,6 @@
 		}
 		function stopwatch(time) {if (typeof time != 'undefined') {return new Date()-time} else {return new Date()}}
 		function rand (min, max) {return Math.floor(Math.random() * (max - min + 1)) + min;}
-		function play_chicken_sound(number) {
-			let audio=document.getElementById('audio');
-			let audiothek=['chicken.wav','chicken2.wav'];
-			audio.src=audiothek[number||rand(0,audiothek.length-1)];
-			audio.volume=0.1;
-			audio.play();
-		}	
-
 		function log(l) {console.log(l)};
 
 	</script>
@@ -312,7 +340,8 @@
 		#cam_image_container {position:relative; display:block; background-color:#f0f0f0; overflow:hidden; margin-bottom:0.4rem;} /*1280*720*/
 		#cam_jpg {position:relative; display:none; width:100%; cursor:pointer; transition:0.2s}
 		#cam_video {position:relative; display:none}
-		#cam_image_overlay {display:block;top:100%;position:absolute;transition:all 0.5s;height:100%;z-index:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
+		#cam_image_overlay {position:absolute;display:block;text-align:left;top:100%;transition:all 0.5s;height:100%;z-index:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
+		#cam_image_overlay_text{display:none;margin:0.5rem;position:absolute;bottom:0;padding:0.1rem 0.2rem;font-size:0.7rem;font-family:Monospace;background-color:rgba(50,50,50,0.75);color:#f0f0f0;}
 		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;padding:0rem 0.2rem;}
 		.info {padding: 0.1rem 0rem; nocolor:#fff; nobackground-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
 		.status {margin-left:0.4rem; padding: 0.1rem 0.25rem; color:#fff; background-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
@@ -347,7 +376,7 @@
 		<div id=screen class=screen>
 			<div id=header></div>
 			<div id=cam_image_container>
-				<div id=cam_image_overlay></div>
+				<div id=cam_image_overlay><div style="position:relative;height:100%"><span id=cam_image_overlay_text></span></div></div>
 				<div><img id=cam_jpg><video id=cam_video controls></video></div>	
 			</div>
 			<div id=cam_name class=cam_info>&nbsp;</div>
