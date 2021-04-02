@@ -10,6 +10,8 @@
 	<title>BLINK</title>
 	<script>
 
+		let global_homescreen_and_videoevents=undefined;
+
 		function go() {
 			on_resize();
 			setInterval(()=>{blink_get_index()},1000*60*5);
@@ -40,10 +42,10 @@
 			}
 		}
 
-		let global_homescreen_and_videoevents=undefined;
-
 		function show_cam(next) {
 			let cjpg=document.getElementById('cam_jpg');
+			let cname=document.getElementById('cam_name');
+			let cvoverlay=document.getElementById('cam_image_overlay');
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
 			let h=hv?hv.homescreen:undefined;
 			let cam_array_number=0; // 0 get's the latest image because blink.js sorts cameras-array by updated_at
@@ -56,23 +58,43 @@
 			if (cam_array_number>=h.cameras.length) {cam_array_number=0}
 			cjpg.cam_id=h.cameras[cam_array_number].id;
 			cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
-			if (next) {display(global_homescreen_and_videoevents)}
+			cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			cvoverlay.style.top='100%';
+			cname.innerHTML=h.cameras[cam_array_number].name;
+			if (next) {display()}
 			return cam_array_number;
 		};
 
+		function capture_buttons_active(active) {
+			let bu=document.getElementById('btn_update');
+			let bu_capturevideo=document.getElementById('btn_capturevideo');
+			let bu_switchcam=document.getElementById('btn_switchcam');
+			let cjpg=document.getElementById('cam_jpg');
+			if (!active) {
+				bu.blur();
+				bu.className='btn_disabled';
+				bu.onclick=undefined;						
+				bu_capturevideo.blur();
+				bu_capturevideo.className='btn_disabled';
+				bu_capturevideo.onclick=undefined;				
+			} else {
+				bu.className='btn';
+				bu.onclick=()=>{blink_update_cam(cjpg.cam_id)};
+				bu_capturevideo.className='btn';
+				bu_capturevideo.onclick=()=>{blink_capture_video(cjpg.cam_id)};
+				bu_switchcam.className='btn';
+			}
+		}
+
 		function display(homescreen_and_videoevents,video_id) {
-			global_homescreen_and_videoevents=homescreen_and_videoevents;
-			let hv=homescreen_and_videoevents?JSON.parse(homescreen_and_videoevents):undefined;
+			if (homescreen_and_videoevents!==undefined) {global_homescreen_and_videoevents=homescreen_and_videoevents};
+			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
 			let h=hv?hv.homescreen:undefined;
 			let v=hv?hv.videoevents:undefined;
 			let cjpg=document.getElementById('cam_jpg');
 			let cvideo=document.getElementById('cam_video');
-			let cvoverlay=document.getElementById('cam_image_overlay');
-			let cname=document.getElementById('cam_name');
 			let cdate=document.getElementById('cam_date');
-			let bu=document.getElementById('btn_update');
-			let bu_capturevideo=document.getElementById('btn_capturevideo');
-			let bu_switchcam=document.getElementById('btn_switchcam');
 			
 			// VIDEO
 			// hack for taking video_id from media-array, if given video_id is within reasonable range (0, 1 or 2 for example)
@@ -82,44 +104,30 @@
 			// filter for this video_id ...
 			let video=(v&&v.media)?v.media.filter(v => v.id==video_id)[0]:undefined;
 			if (video) {
+				cjpg.cam_id=video.device_id;
+				show_cam();
 				cjpg.style.display='none';
 				cvideo.style.display='block';
 				cvideo.style.width='100%';
 				cvideo.style.height='100%';
 				cvideo.src='media/'+video_id;
 				cvideo.autoplay=true;
-				cname.innerHTML=video.device_name; //+' ('+video.device_id+')';
-				cjpg.cam_id=video.device_id;
-				show_cam();
 				let status='<span class=record>on tape</span>';
 				cdate.innerHTML='<span class=info>'+new Date(video.created_at).toLocaleString()+'</span>'+status;
 			} else {
 				// IMAGE
-				// else display current thumbnail of first camera
+				// else display thumbnail of current camera
+				cvideo.pause();
 				cvideo.style.display='none';
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
-					cvideo.pause();
 					let camera=h.cameras[show_cam()];
-					cname.innerHTML=camera.name;
 					let temp=Math.round((camera.signals.temp-32)*5/9)+'°C';
 					let status='';
 					if (camera.status=='done') {status='<span class=status>online</span>';}
 					else {status='<span class=warning>'+camera.status+'</span>';}
 					cdate.innerHTML='<span class=info>'+new Date(camera.updated_at).toLocaleString()+' &nbsp;|&nbsp; '+temp+'</span>'+status;
-					cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
-					cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
-					cvoverlay.style.top='100%';
 				}
-			}
-
-			// UPDATE-BUTTON
-			if (h&&h.cameras) {
-				bu.className='btn';
-				bu.onclick=()=>{blink_update_cam(cjpg.cam_id)};
-				bu_capturevideo.className='btn';
-				bu_capturevideo.onclick=()=>{blink_capture_video(cjpg.cam_id)};
-				bu_switchcam.className='btn';
 			}
 
 			// VIDEO-THUMBNAILS
@@ -133,6 +141,9 @@
 				}
 			}
 			
+			// UPDATE-BUTTON
+			if (h&&h.cameras) {capture_buttons_active(true)}
+
 			setTimeout(()=>{
 				if ((!h||h&&!h.account) ) {blink_login(true)}; //&& confirm('Do you want to log in?')
 			},500);
@@ -176,16 +187,7 @@
 			};
 		}
 		function blink_update_cam(cam_id) {
-			let bu=document.getElementById('btn_update');
-			bu.blur();
-			bu.className='btn_disabled';
-			bu.onclick=undefined;				
-			
-			let bu_capturevideo=document.getElementById('btn_capturevideo');
-			bu_capturevideo.blur();
-			bu_capturevideo.className='btn_disabled';
-			bu_capturevideo.onclick=undefined;				
-
+			capture_buttons_active(false);
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			play_chicken_sound();
@@ -198,16 +200,7 @@
 			});
 		}
 		function blink_capture_video(cam_id) {
-			let bu=document.getElementById('btn_update');
-			bu.blur();
-			bu.className='btn_disabled';
-			bu.onclick=undefined;				
-			
-			let bu_capturevideo=document.getElementById('btn_capturevideo');
-			bu_capturevideo.blur();
-			bu_capturevideo.className='btn_disabled';
-			bu_capturevideo.onclick=undefined;				
-
+			capture_buttons_active(false);
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
 			play_chicken_sound();
@@ -216,7 +209,7 @@
 				log(r);
 				let rj={};
 				try {rj=JSON.parse(r)} catch {()=>{}}
-				blink_track_command_status(cam_id,rj.id,5000,(status)=>{if (status==0) {display(global_homescreen_and_videoevents,0)}});
+				blink_track_command_status(cam_id,rj.id,5000,(status)=>{if (status==0) {display(undefined,0)}});
 			});			
 		}
 		function blink_track_command_status(cam_id,command_id,interval_delay,callback) {
