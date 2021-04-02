@@ -24,31 +24,31 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 }
 
 Blink.prototype.LOGIN = function (callback) {
-	if (this.email&&this.password&&this.authtoken==undefined) {
+	if (this.email&&this.password&&!this.client_verification_required) {
 	    let data = {"email":this.email,"password":this.password,"unique_id":this.unique_id};
 		this.request(this.get_blinkRequestOptions('/api/v5/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
-			if (!this.is_errormessage(rj)) {
-				this.account_id=rj.account?rj.account.account_id:undefined;
-				this.client_id=rj.account?rj.account.client_id:undefined;
-				this.authtoken=rj.auth?rj.auth.token:undefined;
-				this.region_tier=rj.account?rj.account.tier:undefined;
-				this.client_verification_required=rj.account?rj.account.client_verification_required:undefined;
-			    this.write_log('>OK LOGIN '+this.email+' | ACCOUNT_ID '+this.account_id+' | CLIENT_ID '+this.client_id+' | AUTHTOKEN '+this.authtoken+' | REGION_TIER '+this.region_tier);
-			    this.write_log(r);
-			    if (this.client_verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
-			    // filter authtoken
-			    if (rj.auth.token) {rj.auth.token=undefined}
-			} else {this.email=undefined;this.password=undefined;}
+			if (rj) {
+				if (!this.is_errormessage(rj)) {
+					this.account_id=rj.account?rj.account.account_id:undefined;
+					this.client_id=rj.account?rj.account.client_id:undefined;
+					this.authtoken=rj.auth?rj.auth.token:undefined;
+					this.region_tier=rj.account?rj.account.tier:undefined;
+					this.client_verification_required=rj.account?rj.account.client_verification_required:undefined;
+				    this.write_log('>OK LOGIN '+this.email+' | ACCOUNT_ID '+this.account_id+' | CLIENT_ID '+this.client_id+' | AUTHTOKEN '+this.authtoken+' | REGION_TIER '+this.region_tier);
+				    this.write_log(r);
+				    if (this.client_verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
+				    // filter authtoken
+				    if (rj.auth.token) {rj.auth.token=undefined}
+				} else {
+					this.email=undefined;this.password=undefined;
+				}
+			}
 			try {r=JSON.stringify(rj)} catch(e){};
 		    callback(r);
 		});
 	} else {
-		if (this.authtoken!==undefined) {
-			this.write_log('>ALREADY LOGGED IN.'); callback('{"message":"ALREADY LOGGED IN."}');
-		} else {
-			this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
-		}
+		this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
 	}
 }
 
@@ -59,7 +59,7 @@ Blink.prototype.VERIFY = function (pin,callback) {
 		    this.write_log('>OK VERIFY '+r);
 		    let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
 		    if (rj.valid==true) {this.client_verification_required=false}
-		    this.cache=new Cache(25); // reset cache
+		    this.cache=new Cache(50); // reset cache
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED.'); callback('{"error":"ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED."}');}
@@ -72,6 +72,7 @@ Blink.prototype.LOGOUT = function (callback) {
 			this.email=undefined;
 			this.password=undefined;
 			this.authtoken=undefined;
+			this.client_verification_required=undefined;
 			callback(r);
 		});
 	} else {this.write_log('>ERROR ACCOUNT_ID AND CLIENT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID AND CLIENT_ID REQUIRED."}');}
@@ -113,7 +114,7 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 				this.homescreen=rj;
 				if (this.homescreen && this.homescreen.cameras) {this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))};
 		     	this.write_log('>OK GET_HOMESCREEN');
-			} else {this.homescreen={};this.authtoken==undefined;}
+			} else {this.homescreen={}}
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
@@ -138,7 +139,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 
 				this.videoevents=rj;
 				this.write_log('>OK GET_VIDEO_EVENTS');
-			} else {this.videoevents={};this.authtoken==undefined;}
+			} else {this.videoevents={}}
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}

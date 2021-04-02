@@ -235,7 +235,7 @@
 									alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!');
 								}
 								else if (counter>max_count) {
-									alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem did not answer in a reasonable amount of time.\nPlease try again!');
+									alert('Hmmm. Blink did not respond to your request #'+command_id+' within a reasonable period of time.\nPlease try again!');
 								};
 								blink_get_index(true);
 								setTimeout(()=>{callback(rj.status)},1000);
@@ -245,6 +245,7 @@
 				},interval_delay)
 			} else {
 				alert('Oops. Something went wrong.\nSystem did not assign an ID to your command.\nPlease try again!');
+				blink_get_index();
 			}
 		}
 		function blink_get_command_status(cam_id,command_id,callback) {
