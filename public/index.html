@@ -46,6 +46,7 @@
 			let cjpg=document.getElementById('cam_jpg');
 			let cname=document.getElementById('cam_name');
 			let cvoverlay=document.getElementById('cam_image_overlay');
+			let cvoverlaytext=document.getElementById('cam_image_overlay_text');
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
 			let h=hv?hv.homescreen:undefined;
 			let cam_array_number=0; // 0 get's the latest image because blink.js sorts cameras-array by updated_at
@@ -59,6 +60,8 @@
 			cjpg.cam_id=h.cameras[cam_array_number].id;
 			cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
 			cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			//cvoverlaytext.style.display='none';
+			cvoverlaytext.style.opacity=0;
 			cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 			cvoverlay.style.top='100%';
 			cname.innerHTML=h.cameras[cam_array_number].name;
@@ -102,12 +105,13 @@
 				let o=document.getElementById('cam_image_overlay_text');
 				let l=o.innerHTML.length;
 				if (o.innerHTML==t.substr(0,l)) {
-					let delay=d||20+Math.random()*100;
+					let delay=d||750/(t.length||1);//*Math.random();
 					timer = setTimeout(()=>{
-						o.style.display='block';
+						//o.style.display='block';
+						o.style.opacity=1;
 						o.innerHTML=t.substr(0,++l);
-						if (l==t.length) {ticker(t,2000)}
-						else if (l<t.length) {ticker(t)} //else {o.innerHTML='';o.style.display='none';}
+						if (l==t.length) {ticker(t,3000)}
+						else if (l<t.length) {ticker(t)} else {o.style.opacity=0}
 					},delay);
 				} else if ( (o.innerHTML!==t.substr(0,l))||l==0) {
 					o.innerHTML='';
@@ -120,7 +124,7 @@
 			capture_buttons_active(false);
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
-			ticker('connecting'); //new Date().toString()
+			ticker('connecting',750); //new Date().toString() //\u232A
 			play_chicken_sound();
 		}
 
@@ -254,7 +258,7 @@
 						counter++;
 						let rj={};
 						try {rj=JSON.parse(r)} catch {()=>{}}
-						if (rj.commands[0]) {ticker(rj.commands[0].state_condition)};
+						if (rj.commands[0]) {ticker(rj.commands[0].state_condition)}; //'\u232A '
 						if (rj.complete || counter>max_count) {
 							clearInterval(tracking_interval);
 							if (command_id) {
@@ -341,7 +345,7 @@
 		#cam_jpg {position:relative; display:none; width:100%; cursor:pointer; transition:0.2s}
 		#cam_video {position:relative; display:none}
 		#cam_image_overlay {position:absolute;display:block;text-align:left;top:100%;transition:all 0.5s;height:100%;z-index:1;cursor:pointer;background-repeat:no-repeat;background-size:140%;background-position:-80% 0%;background-image:url('chicken.svg');}
-		#cam_image_overlay_text{display:none;margin:0.5rem;position:absolute;bottom:0;padding:0.1rem 0.2rem;font-size:0.7rem;font-family:Monospace;background-color:rgba(50,50,50,0.75);color:#f0f0f0;}
+		#cam_image_overlay_text{opacity:1;transition:all 0.5s;margin:0.5rem;position:absolute;bottom:0;padding:0.1rem 0.3rem 0.1rem 0.3rem;font-size:0.7rem;font-family:Monospace;background-color:rgba(50,50,50,0.75);color:#f0f0f0;}
 		.cam_info {font-size:1rem;text-align:right;border-bottom:0px solid #e0e0e0;border-radius:0;padding:0rem 0.2rem;}
 		.info {padding: 0.1rem 0rem; nocolor:#fff; nobackground-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
 		.status {margin-left:0.4rem; padding: 0.1rem 0.25rem; color:#fff; background-color:#00a900; border-radius:0.1rem; font-size:0.6rem; position:relative; top:-0.15rem;}
