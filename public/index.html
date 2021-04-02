@@ -61,8 +61,8 @@
 			cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
 			cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 			//cvoverlaytext.style.display='none';
-			cvoverlaytext.style.opacity=0;
 			cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
+			cvoverlaytext.style.opacity=0;
 			cvoverlay.style.top='100%';
 			cname.innerHTML=h.cameras[cam_array_number].name;
 			if (next) {display()}
@@ -99,10 +99,11 @@
 		}	
 
 		var timer=undefined;
-		function ticker(t,d) {
+		function ticker(t,d,bgcolor) {
 			clearTimeout(timer);
 			if (t) {
 				let o=document.getElementById('cam_image_overlay_text');
+				o.style.backgroundColor=bgcolor||'rgba(50,50,50,0.75)';
 				let l=o.innerHTML.length;
 				if (o.innerHTML==t.substr(0,l)) {
 					let delay=d||750/(t.length||1);//*Math.random();
@@ -110,8 +111,8 @@
 						//o.style.display='block';
 						o.style.opacity=1;
 						o.innerHTML=t.substr(0,++l);
-						if (l==t.length) {ticker(t,3000)}
-						else if (l<t.length) {ticker(t)} else {o.style.opacity=0}
+						if (l==t.length) {ticker(t,l*500,bgcolor)}
+						else if (l<t.length) {ticker(t,undefined,bgcolor)} else {o.style.opacity=0}
 					},delay);
 				} else if ( (o.innerHTML!==t.substr(0,l))||l==0) {
 					o.innerHTML='';
@@ -187,7 +188,7 @@
 
 			setTimeout(()=>{
 				if ((!h||h&&!h.account) ) {blink_login(true)}; //&& confirm('Do you want to log in?')
-			},500);
+			},15000);
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -264,20 +265,27 @@
 							if (command_id) {
 								log('COMMAND #'+command_id+' COMPLETED: '+counter+' loops | '+rj.status+' | '+rj.status_msg);
 								if (rj.status!==0) {
-									alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!');
+									//alert('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!');
+									ticker('Oops. Something went wrong while processing your request '+'#'+command_id+'.\nSystem answered: '+rj.status_msg+' ('+rj.status_code+')\nCheer up! Just try again!',undefined,'rgba(150,50,50,0.75)');
+									capture_buttons_active(true);
 								}
 								else if (counter>max_count) {
-									alert('Hmmm. Blink did not respond to your request #'+command_id+' within a reasonable period of time.\nPlease try again!');
-								};
-								blink_get_index(true);
-								setTimeout(()=>{callback(rj.status)},1000);
+									//alert('Hmmm. Blink did not respond to your request #'+command_id+' within a reasonable period of time.\nPlease try again!');
+									ticker('Hmmm. Blink did not respond to your request #'+command_id+' within a reasonable period of time.\nPlease try again!',undefined,'rgba(150,50,50,0.75)');
+									capture_buttons_active(true);
+								} else {
+									blink_get_index(true);
+									setTimeout(()=>{callback(rj.status)},1000);
+								}
 							}
 						};
 					});
 				},interval_delay)
 			} else {
-				alert('Oops. Something went wrong.\nSystem did not assign an ID to your command.\nPlease try again!');
-				blink_get_index();
+				//alert('Oops. Something went wrong.\nSystem did not assign an ID to your command.\nPlease try again!');
+				ticker('Oops. Something went wrong.\nSystem did not assign an ID to your command.\nPlease try again!',undefined,'rgba(150,50,50,0.75)');
+				capture_buttons_active(true);
+				//blink_get_index();
 			}
 		}
 		function blink_get_command_status(cam_id,command_id,callback) {

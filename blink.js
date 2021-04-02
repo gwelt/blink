@@ -146,7 +146,7 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 }
 
 Blink.prototype.GET_IMAGE = function (cam_id,callback) {
-	if (this.homescreen.cameras) {
+	if (this.homescreen&&this.homescreen.cameras) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		let image=this.homescreen.cameras[cam_array_number].thumbnail+'.jpg';
@@ -165,7 +165,7 @@ Blink.prototype.GET_IMAGE = function (cam_id,callback) {
 }
 
 Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
-	if (this.homescreen.cameras) {
+	if (this.homescreen&&this.homescreen.cameras) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		cam_id=this.homescreen.cameras[cam_array_number].id;
@@ -180,7 +180,7 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 }
 
 Blink.prototype.CAPTURE_VIDEO = function (cam_id,n,callback) {
-	if (this.homescreen.cameras) {
+	if (this.homescreen&&this.homescreen.cameras) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		cam_id=this.homescreen.cameras[cam_array_number].id;
@@ -195,7 +195,7 @@ Blink.prototype.CAPTURE_VIDEO = function (cam_id,n,callback) {
 }
 
 Blink.prototype.GET_COMMAND_STATUS = function (n_id,command_id,callback) {
-	if (this.homescreen.networks&&command_id) {
+	if (this.homescreen&&this.homescreen.networks&&command_id) {
 		let network_id=n_id||(this.homescreen.networks)?this.homescreen.networks[0].id:undefined;
 		if (network_id) {
 		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/command/'+command_id,'GET'),'',false,(r)=>{
