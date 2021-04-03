@@ -16,6 +16,7 @@ function Blink(email,password,unique_id,account_id,client_id,authtoken,region_ti
 	this.homescreen={};
 	this.videoevents={};
 	this.lastupdate=undefined;
+	this.cam_last_update_store=new CamLastUpdateStore();
 	this.client_verification_required=undefined;
 	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
 	this.cache=new Cache(50);
@@ -48,7 +49,15 @@ Blink.prototype.LOGIN = function (callback) {
 		    callback(r);
 		});
 	} else {
-		this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
+		if (!this.email||!this.password) {
+			this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
+		}
+		else if (this.client_verification_required) {
+			this.write_log('>ERROR CLIENT VERIFICATION REQUIRED.'); callback('{"message":"CLIENT VERIFICATION REQUIRED."}');
+		} 
+		else {
+			this.write_log('>ERROR LOGIN FAILED.'); callback('{"error":"LOGIN FAILED."}');
+		}
 	}
 }
 
@@ -112,7 +121,21 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined}; 
 			if (!this.is_errormessage(rj)) {
 				this.homescreen=rj;
-				if (this.homescreen && this.homescreen.cameras) {this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))};
+				if (this.homescreen && this.homescreen.cameras) {
+					this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
+
+					// store last thumbnail_updated_at
+					this.homescreen.cameras.forEach((c)=>{
+						let updated_at_store=this.cam_last_update_store.find(c.id);
+						if (!updated_at_store) {
+							this.cam_last_update_store.add(new CamLastUpdateStoreItem(c.id,c.updated_at));
+							c.thumbnail_updated_at=c.updated_at;
+						} else {
+							c.thumbnail_updated_at=updated_at_store.updated_at;
+						}
+					});
+
+				};
 		     	this.write_log('>OK GET_HOMESCREEN');
 			} else {this.homescreen={}}
 			callback(r);
@@ -171,6 +194,7 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		cam_id=this.homescreen.cameras[cam_array_number].id;
 		let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
 		if (network) {
+			this.cam_last_update_store.delete(cam_id);
 		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
 		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network.id);
 		     	callback(r);
@@ -283,6 +307,12 @@ function Cache(max_items) {this.items=[];this.max_items=max_items||1;}
 function Cacheitem(id,data) {this.id=id;this.data=data;}
 Cache.prototype.add = function (cacheitem) {this.items.push(cacheitem); while (this.items.length>this.max_items) {this.items.splice(0,1)};}
 Cache.prototype.get = function (id) {let f=this.items.find(i => i.id==id); return f?f.data:undefined}
+
+function CamLastUpdateStore(max_items) {this.items=[];this.max_items=max_items||100;}
+function CamLastUpdateStoreItem(id,updated_at) {this.id=id;this.updated_at=updated_at}
+CamLastUpdateStore.prototype.add = function (newitem) {this.items.push(newitem); while (this.items.length>this.max_items) {this.items.splice(0,1)};}
+CamLastUpdateStore.prototype.find = function (id) {let f=this.items.find(i => i.id==id); return f;}
+CamLastUpdateStore.prototype.delete = function (id) {this.items=this.items.filter(i => i.id!=id); return true;}
 
 function Logger(maxlength) {this.maxlength=(maxlength||25); this.list=[];}
 Logger.prototype.add = function (s) {this.list.push(s); while (this.list.length>this.maxlength) {this.list.splice(0,1)};}

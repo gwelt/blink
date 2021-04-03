@@ -106,12 +106,12 @@
 				o.style.backgroundColor=bgcolor||'rgba(50,50,50,0.75)';
 				let l=o.innerHTML.length;
 				if (o.innerHTML==t.substr(0,l)) {
-					let delay=d||750/(t.length||1);//*Math.random();
+					let delay=d||650/(t.length||1);//*Math.random();
 					timer = setTimeout(()=>{
 						//o.style.display='block';
 						o.style.opacity=1;
 						o.innerHTML=t.substr(0,++l);
-						if (l==t.length) {ticker(t,l*500,bgcolor)}
+						if (l==t.length) {ticker(t,l*250,bgcolor)}
 						else if (l<t.length) {ticker(t,undefined,bgcolor)} else {o.style.opacity=0}
 					},delay);
 				} else if ( (o.innerHTML!==t.substr(0,l))||l==0) {
@@ -125,7 +125,7 @@
 			capture_buttons_active(false);
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
-			ticker('connecting',750); //new Date().toString() //\u232A
+			ticker('connecting'); //new Date().toString() //\u232A
 			play_chicken_sound();
 		}
 
@@ -168,7 +168,7 @@
 					let status='';
 					if (camera.status=='done') {status='<span class=status>online</span>';}
 					else {status='<span class=warning>'+camera.status+'</span>';}
-					cdate.innerHTML='<span class=info>'+new Date(camera.updated_at).toLocaleString()+' &nbsp;|&nbsp; '+temp+'</span>'+status;
+					cdate.innerHTML='<span class=info>'+new Date(camera.thumbnail_updated_at).toLocaleString()+' &nbsp;|&nbsp; '+temp+'</span>'+status;
 				}
 			}
 
@@ -186,9 +186,14 @@
 			// UPDATE-BUTTON
 			if (h&&h.cameras) {capture_buttons_active(true)}
 
+			/*
+			if (!h||h&&!h.account) {
+				ticker('Sorry. No data at the moment. Please try again later.',undefined,'rgba(150,50,50,0.75)')
+			}
+			*/
 			setTimeout(()=>{
-				if ((!h||h&&!h.account) ) {blink_login(true)}; //&& confirm('Do you want to log in?')
-			},15000);
+				if (!h||h&&!h.account) {blink_login(true)}; //&& confirm('Do you want to log in?')
+			},1500);
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -196,7 +201,7 @@
 				get('api','{"command":"login"}',(r)=>{
 					log(r);
 					let rj={};
-					try {rj=JSON.parse(r)} catch {(e)=>{alert('Sorry. An error occured: '+e)}}
+					try {rj=JSON.parse(r)} catch {(e)=>{alert('Sorry. An error occured: '+e+'\nTry again!')}}
 					if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
 				});
 			} else {
@@ -206,7 +211,9 @@
 					if (pw) {
 						get('api','{"command":"login","email":"'+email+'","password":"'+pw+'"}',(r)=>{
 							log(r);
-							blink_get_index(true);
+							let rj={};
+							try {rj=JSON.parse(r)} catch {(e)=>{alert('Sorry. An error occured: '+e+'\nTry again!')}}
+							if (!rj.error) {blink_get_index(true)} else {blink_login(false)}
 						});
 					};
 				};		
@@ -214,7 +221,7 @@
 		}
 		function blink_verify() {
 			let pin=prompt('Blink requests verification.\nPlease check your email for the required PIN.','');
-			if (pin) {
+			if (pin&&pin.length==6) {
 				get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
 					log(r);
 					blink_get_index(true);
@@ -274,8 +281,8 @@
 									ticker('Hmmm. Blink did not respond to your request #'+command_id+' within a reasonable period of time.\nPlease try again!',undefined,'rgba(150,50,50,0.75)');
 									capture_buttons_active(true);
 								} else {
-									blink_get_index(true);
-									setTimeout(()=>{callback(rj.status)},1000);
+									setTimeout(()=>{blink_get_index(true)},850);
+									setTimeout(()=>{callback(rj.status)},1850);
 								}
 							}
 						};
