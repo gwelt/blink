@@ -122,7 +122,6 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 			if (!this.is_errormessage(rj)) {
 				this.homescreen=rj;
 				if (this.homescreen && this.homescreen.cameras) {
-					this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
 
 					// store last thumbnail_updated_at
 					this.homescreen.cameras.forEach((c)=>{
@@ -135,6 +134,8 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 						}
 					});
 
+					//this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
+					this.homescreen.cameras.sort((a,b)=>new Date(b.thumbnail_updated_at)-new Date(a.thumbnail_updated_at));
 				};
 		     	this.write_log('>OK GET_HOMESCREEN');
 			} else {this.homescreen={}}
