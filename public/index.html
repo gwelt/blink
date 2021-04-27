@@ -11,6 +11,8 @@
 	<script>
 
 		let global_homescreen_and_videoevents=undefined;
+		let mailhook_configured=true;
+		let login_attempts=0;
 
 		function go() {
 			on_resize();
@@ -94,41 +96,43 @@
 			let audio=document.getElementById('audio');
 			let audiothek=['chicken.wav','chicken2.wav'];
 			audio.src=audiothek[number||rand(0,audiothek.length-1)];
-			audio.volume=0.1;
+			audio.volume=0.01;
 			audio.play();
 		}	
 
-		var timer=undefined;
+		var ticker_timer=undefined;
 		function ticker(t,d,bgcolor) {
-			clearTimeout(timer);
+			let cvoverlay=document.getElementById('cam_image_overlay');
+			cvoverlay.style.top='0px';
+			clearTimeout(ticker_timer);
 			if (t) {
 				let o=document.getElementById('cam_image_overlay_text');
 				o.style.backgroundColor=bgcolor||'rgba(50,50,50,0.75)';
 				let l=o.innerHTML.length;
 				if (o.innerHTML==t.substr(0,l)) {
-					let delay=d||650/(t.length||1);//*Math.random();
-					timer = setTimeout(()=>{
+					let delay=d||(650/(t.length||1));//*Math.random();
+					ticker_timer = setTimeout(()=>{
 						//o.style.display='block';
 						o.style.opacity=1;
 						o.innerHTML=t.substr(0,++l);
-						if (l==t.length) {ticker(t,l*250,bgcolor)}
+						if (l==t.length) {ticker(t,l*500,bgcolor)}
 						else if (l<t.length) {ticker(t,undefined,bgcolor)} else {o.style.opacity=0}
 					},delay);
 				} else if ( (o.innerHTML!==t.substr(0,l))||l==0) {
 					o.innerHTML='';
-					ticker(t,undefined,bgcolor);				
+					ticker(t,undefined,bgcolor);
 				}			
 			}
 		}
 
 		function please_stand_by() {
-			capture_buttons_active(false);
 			let cvoverlay=document.getElementById('cam_image_overlay');
 			cvoverlay.style.top='0px';
-			ticker('connecting'); //new Date().toString() //\u232A
+			capture_buttons_active(false);
 			play_chicken_sound();
 		}
 
+		var login_timer=undefined;
 		function display(homescreen_and_videoevents,video_id) {
 			if (homescreen_and_videoevents!==undefined) {global_homescreen_and_videoevents=homescreen_and_videoevents};
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
@@ -172,6 +176,9 @@
 				}
 			}
 
+			// UPDATE-BUTTON
+			if (h&&h.cameras) {capture_buttons_active(true)}
+
 			// VIDEO-THUMBNAILS
 			if (v&&v.media) {
 				let i=0; while ((i<7)&&(v.media[i])) {
@@ -183,17 +190,21 @@
 				}
 			}
 			
-			// UPDATE-BUTTON
-			if (h&&h.cameras) {capture_buttons_active(true)}
-
-			/*
 			if (!h||h&&!h.account) {
-				ticker('Sorry. No data at the moment. Please try again later.',undefined,'rgba(150,50,50,0.75)')
+				ticker('Blink needs to authenticate to the server.',undefined,'rgba(150,50,50,0.75)');
+				if (++login_attempts<=3) {
+					setTimeout(()=>{
+						ticker('Authentication in progress. Please stand by!',undefined,'rgba(50,150,50,0.75)');
+						blink_login(true);
+					},2000);
+				} else {
+					clearTimeout(login_timer); 
+					login_timer = setTimeout(()=>{
+						if (confirm('Do you want to log in?')) {blink_login(true)};
+					},3000);
+				}
+
 			}
-			*/
-			setTimeout(()=>{
-				if (!h||h&&!h.account) {blink_login(true)}; //&& confirm('Do you want to log in?')
-			},1500);
 		}
 
 		function blink_login(just_use_the_credentials_known_by_the_server_to_log_in_again_and_get_a_new_authtoken) {
@@ -220,13 +231,19 @@
 			};
 		}
 		function blink_verify() {
-			let pin=prompt('Blink requests verification.\nPlease check your email for the required PIN.','');
-			if (pin&&pin.length==6) {
-				get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
-					log(r);
-					blink_get_index(true);
-				});
-			} else {setTimeout(()=>{blink_get_index(true)},1500)} // it might have resolved although no pin was entered (see mailhook-function)
+			if (mailhook_configured) {
+				ticker('Verification in progress. Blink will auto-update in a few seconds.',undefined,'rgba(50,150,50,0.75)');
+				setTimeout(()=>{login_attempts=0;blink_get_index(true)},8000);
+			} else {
+				let pin=prompt('Blink requests verification.\nPlease check your email/SMS for the required PIN.','');
+				if (pin&&pin.length==6) {
+					get('api','{"command":"verify","pin":"'+pin+'"}',(r)=>{
+						log(r);
+						login_attempts=0;
+						blink_get_index(true);
+					});
+				} else {setTimeout(()=>{blink_get_index(true)},1500)} // it might have resolved although no pin was entered (see mailhook-function)
+			}
 		}
 		function blink_logout() {
 			if (confirm('This will disconnect this server from Blink.\nDo you really want to do this?')) {
@@ -238,6 +255,7 @@
 		}
 		function blink_update_cam(cam_id) {
 			please_stand_by();
+			ticker('updating cam'); //new Date().toString() //\u232A
 			log('requesting new cam-thumbnail - this may take a few seconds...');
 			get('api','{"command":"update_cam","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);
@@ -248,6 +266,7 @@
 		}
 		function blink_capture_video(cam_id) {
 			please_stand_by();
+			ticker('capturing video'); //new Date().toString() //\u232A
 			log('requesting video - this may take a while and will be done in the background...');
 			get('api','{"command":"capture_video","cam_id":"'+cam_id+'"}',(r)=>{
 				log(r);

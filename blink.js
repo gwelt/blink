@@ -138,7 +138,10 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 					this.homescreen.cameras.sort((a,b)=>new Date(b.thumbnail_updated_at)-new Date(a.thumbnail_updated_at));
 				};
 		     	this.write_log('>OK GET_HOMESCREEN');
-			} else {this.homescreen={}}
+			} else {
+				this.homescreen={};
+				this.write_log('>ERROR DID NOT GET_HOMESCREEN');
+			}
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
@@ -163,7 +166,10 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 
 				this.videoevents=rj;
 				this.write_log('>OK GET_VIDEO_EVENTS');
-			} else {this.videoevents={}}
+			} else {
+				this.videoevents={};
+				this.write_log('>ERROR DID NOT GET_VIDEO_EVENTS');
+			}
 			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
