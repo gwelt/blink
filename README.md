@@ -18,7 +18,7 @@ open http://localhost:3000
 and let Javascript guide you through the process.
   
 ## ...and see this
-Exemplary index.html user interface shows the latest cam-image and three latest videos.  
-Adapted for mobile devices and flavoured with some garden colours and chicken to fit my personal needs.  
+Exemplary index.html user interface shows the latest cam-image and six latest videos.  
+Adapted for mobile devices and flavoured with some garden colours and chicken.  
 
 ![](/public/screenshot.jpg)
