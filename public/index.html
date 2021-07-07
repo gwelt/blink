@@ -168,11 +168,14 @@
 				cjpg.style.display='block';
 				if (h&&h.cameras) {
 					let camera=h.cameras[show_cam()];
-					let temp=Math.round((camera.signals.temp-32)*5/9)+'°C';
+					let temp='';
+					if (camera.signals) {
+					  temp=' &nbsp;|&nbsp; '+Math.round((camera.signals.temp-32)*5/9)+'°C';
+					}
 					let status='';
-					if (camera.status=='done') {status='<span class=status>online</span>';}
+					if (camera.status=='done'||'online') {status='<span class=status>online</span>';}
 					else {status='<span class=warning>'+camera.status+'</span>';}
-					cdate.innerHTML='<span class=info>'+new Date(camera.thumbnail_updated_at).toLocaleString()+' &nbsp;|&nbsp; '+temp+'</span>'+status;
+					cdate.innerHTML='<span class=info>'+new Date(camera.thumbnail_updated_at).toLocaleString()+temp+'</span>'+status;
 				}
 			}
 
@@ -196,7 +199,7 @@
 					setTimeout(()=>{
 						ticker('Authentication in progress. Please stand by!',undefined,'rgba(50,150,50,0.75)');
 						blink_login(true);
-					},2000);
+					},2500);
 				} else {
 					clearTimeout(login_timer); 
 					login_timer = setTimeout(()=>{

@@ -123,6 +123,16 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 				this.homescreen=rj;
 				if (this.homescreen && this.homescreen.cameras) {
 
+					// hack: some cams are listed as "owls"
+					// copy them to cameras-list ... should do the trick
+					let also_show_owls=false; // Deactivated. "owls" (Blink Minis) don't work with this API. Videos show up in captured video list (even if not listed in homescreen.cameras), but capturing images or videos with current API won't work.
+					if (also_show_owls) {
+						if (this.homescreen.owls) {
+							let cams_and_owls = this.homescreen.cameras.concat(this.homescreen.owls);
+							this.homescreen.cameras=cams_and_owls;
+						}				
+					}
+
 					// store last thumbnail_updated_at
 					this.homescreen.cameras.forEach((c)=>{
 						let updated_at_store=this.cam_last_update_store.find(c.id);
@@ -199,11 +209,11 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		cam_id=this.homescreen.cameras[cam_array_number].id;
-		let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
-		if (network) {
+		let network_id=this.homescreen.cameras[cam_array_number].network_id;
+		if (network_id) {
 			this.cam_last_update_store.delete(cam_id);
-		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
-		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network.id);
+		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
+		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network_id);
 		     	callback(r);
 		    });
 		}
@@ -215,19 +225,21 @@ Blink.prototype.CAPTURE_VIDEO = function (cam_id,n,callback) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		cam_id=this.homescreen.cameras[cam_array_number].id;
-		let network=n||(this.homescreen.networks)?this.homescreen.networks[0]:undefined;
-		if (network) {
-		    this.request(this.get_blinkRequestOptions('/network/'+network.id+'/camera/'+cam_id+'/clip','POST'),'',false,(r)=>{
-		     	this.write_log('>OK CAPTURE_VIDEO '+cam_id+' @ '+network.id);
+		let network_id=this.homescreen.cameras[cam_array_number].network_id;
+		if (network_id) {
+		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/camera/'+cam_id+'/clip','POST'),'',false,(r)=>{
+		     	this.write_log('>OK CAPTURE_VIDEO '+cam_id+' @ '+network_id);
 		    	callback(r);
 		    });
 		}
 	} else {this.write_log('>ERROR CAM/NETWORK NOT AVAILABLE.'); callback('{"error":"CAM/NETWORK NOT AVAILABLE."}');}
 }
 
-Blink.prototype.GET_COMMAND_STATUS = function (n_id,command_id,callback) {
-	if (this.homescreen&&this.homescreen.networks&&command_id) {
-		let network_id=n_id||(this.homescreen.networks)?this.homescreen.networks[0].id:undefined;
+Blink.prototype.GET_COMMAND_STATUS = function (cam_id,command_id,callback) {
+	if (this.homescreen&&this.homescreen.networks&&this.homescreen.cameras&&command_id) {
+		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
+		if (cam_array_number==-1) {cam_array_number=0}
+		let network_id=this.homescreen.cameras[cam_array_number].network_id;
 		if (network_id) {
 		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/command/'+command_id,'GET'),'',false,(r)=>{
 		     	this.write_log('>OK COMMAND_STATUS '+command_id+' @ '+network_id);
