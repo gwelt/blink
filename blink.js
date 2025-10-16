@@ -1,90 +1,202 @@
 module.exports = Blink;
 // usage:
-// var blink = new Blink('youremail@domain.com','yoursecretpassword','UNIQUE_ID_LIKE_11111111-1111-1111-1111-111111111111');
+//const Blink = require('./blink.js');
+//var blink = new Blink('youremail@domain.com','yoursecretpassword','UNIQUE_ID_LIKE_11111111-1111-1111-1111-111111111111');
 const https = require('https');
 
-function Blink(email,password,unique_id,account_id,client_id,authtoken,region_tier,accepted_age_of_data_in_seconds) {
-	this.email=email;
+function Blink(username,password,hardware_id,accepted_age_of_data_in_seconds) {
+	this.username=username;
 	this.password=password;
-	this.unique_id=unique_id;
+	this.hardware_id=hardware_id;
+	
+	// LOGIN =>
+	this.pin=undefined;
 
-	this.account_id=account_id;
-	this.client_id=client_id;
-	this.authtoken=authtoken;
-	this.region_tier=region_tier;
+	// VERIFY =>
+	this.access_token=undefined;
+	this.refresh_token=undefined;
+	this.token_type=undefined;
+	this.refresh_timeout=undefined;
 
+	// GET_ACCOUNT_TIER_TULSA =>
+	this.account_id=undefined;
+	this.tier=undefined;
+	this.tulsa_id=undefined;
+
+	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
+	this.client_verification_required=undefined;
+	
 	this.homescreen={};
 	this.videoevents={};
 	this.lastupdate=undefined;
-	this.cam_last_update_store=new CamLastUpdateStore();
-	this.client_verification_required=undefined;
-	this.accepted_age_of_data_in_seconds=accepted_age_of_data_in_seconds;
 	this.cache=new Cache(50);
-	this.log=new Logger(50);
+	this.log=new Logger(150);
 	return this;
 }
 
 Blink.prototype.LOGIN = function (callback) {
-	if (this.email&&this.password&&!this.client_verification_required) {
-	    let data = {"email":this.email,"password":this.password,"unique_id":this.unique_id};
-		this.request(this.get_blinkRequestOptions('/api/v5/account/login','POST',{'Content-Type':'application/json'}),JSON.stringify(data),false,(r)=>{
+	let options={'method':'POST','hostname':'api.oauth.blink.com','path':'/oauth/token','headers':{'content-type':'application/json','hardware_id':this.hardware_id},'port':'443'}
+	let data={'username':this.username,'password':this.password,'grant_type':'password','client_id':'android','scope':'client'}
+	if (this.username&&this.password) {
+		this.request(options,JSON.stringify(data),false,(r)=>{
+			//{"email":"n****@gm***.com","next_time_in_secs":60,"phone":"n****@gm***.com","tsv_state":"email"}
+			//{"error":"unsupported_grant_type","error_description":"invalid grant"}
 			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
 			if (rj) {
-				if (!this.is_errormessage(rj)) {
-					this.account_id=rj.account?rj.account.account_id:undefined;
-					this.client_id=rj.account?rj.account.client_id:undefined;
-					this.authtoken=rj.auth?rj.auth.token:undefined;
-					this.region_tier=rj.account?rj.account.tier:undefined;
-					this.client_verification_required=rj.account?rj.account.client_verification_required:undefined;
-				    this.write_log('>OK LOGIN '+this.email+' | ACCOUNT_ID '+this.account_id+' | CLIENT_ID '+this.client_id+' | AUTHTOKEN '+this.authtoken+' | REGION_TIER '+this.region_tier);
-				    this.write_log(r);
-				    if (this.client_verification_required) {this.write_log('>ERROR VERIFICATION REQUIRED FOR CLIENT ID '+this.client_id)};
-				    // filter authtoken
-				    if (rj.auth.token) {rj.auth.token=undefined}
-				} else {
-					this.email=undefined;this.password=undefined;
-				}
+				this.write_log('>OK LOGIN/REQUEST_2FA_CODE. | '+r);
+				this.client_verification_required=true;
+				callback('{"message":"CLIENT VERIFICATION REQUIRED."}');
+			} else {
+				this.write_log('>ERROR LOGIN/REQUEST_2FA_CODE FAILED. | '+r);
+				callback('{"error":"ERROR LOGIN/REQUEST_2FA_CODE FAILED. | '+r+'"}');
 			}
-			try {r=JSON.stringify(rj)} catch(e){};
-		    callback(r);
 		});
 	} else {
-		if (!this.email||!this.password) {
-			this.write_log('>ERROR EMAIL AND PASSWORD REQUIRED.'); callback('{"error":"EMAIL AND PASSWORD REQUIRED."}');
-		}
-		else if (this.client_verification_required) {
-			this.write_log('>ERROR CLIENT VERIFICATION REQUIRED.'); callback('{"message":"CLIENT VERIFICATION REQUIRED."}');
-		} 
-		else {
-			this.write_log('>ERROR LOGIN FAILED.'); callback('{"error":"LOGIN FAILED."}');
-		}
+		this.write_log('>LOGIN: USERNAME AND PASSWORD REQUIRED.');
+		callback('{"error":"LOGIN: USERNAME AND PASSWORD REQUIRED."}');
 	}
 }
 
 Blink.prototype.VERIFY = function (pin,callback) {
-    if (this.account_id&&this.client_id&&pin) {    	
-	    let data = {"pin":pin};
-		this.request(this.get_blinkRequestOptions('/api/v4/account/'+this.account_id+'/client/'+this.client_id+'/pin/verify','POST',{'Content-Type':'application/json','TOKEN_AUTH':this.authtoken}),JSON.stringify(data),false,(r)=>{
-		    this.write_log('>OK VERIFY '+r);
-		    let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
-		    if (rj.valid==true) {this.client_verification_required=false}
-		    this.cache=new Cache(50); // reset cache
-			callback(r);
+	this.pin=pin;
+	let options={'method':'POST','hostname':'api.oauth.blink.com','path':'/oauth/token','headers':{'2fa-code':this.pin,'content-type':'application/json','hardware_id':this.hardware_id},'port':'443'}
+	let data={'username':this.username,'password':this.password,'grant_type':'password','client_id':'android','scope':'client'}
+	if (this.username&&this.password&&this.pin) {
+		this.request(options,JSON.stringify(data),false,(r)=>{
+			//{"access_token":"...","expires_in":14400,"refresh_token":"...","scope":"client","token_type":"Bearer"}
+			//{"err_msg":"bad request response from dependency service","error":"Verification Code is invalid or expired"}
+			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
+			if (rj&&rj.access_token) {
+				this.write_log('>OK VERIFY. ('+this.pin+')');
+				//this.all_token=rj;
+				this.access_token=rj.access_token;
+				this.refresh_token=rj.refresh_token;
+				this.token_type=rj.token_type;
+				if (rj.expires_in>0) {
+					clearTimeout(this.refresh_timeout);
+					this.refresh_timeout=setTimeout(()=>{this.REFRESH(()=>{})},1000*(rj.expires_in-600)); // REFRESH in 240 minutes (-10 minutes buffer)
+				}
+				//this.access_token_content=this.get_access_token_content();
+				this.GET_ACCOUNT_TIER_TULSA((r2)=>{
+					this.client_verification_required=false;
+					callback(r+''+r2);
+				})
+			} else {
+				this.write_log('>ERROR VERIFY FAILED. ('+this.pin+') | '+r);
+				callback('{"error":"ERROR VERIFY FAILED. ('+this.pin+') | '+r+'"}');
+			}
 		});
-    } else {this.write_log('>ERROR ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED.'); callback('{"error":"ACCOUNT_ID, CLIENT_ID AND PIN REQUIRED."}');}
+	} else {
+		this.write_log('>VERIFY: PIN REQUIRED.');
+		callback('{"error":"VERIFY: PIN REQUIRED."}');
+	}
+}
+
+Blink.prototype.GET_ACCOUNT_TIER_TULSA = function (callback) {
+	this.request(this.get_blinkRequestOptions('/api/v1/users/tier_info',undefined,undefined,'rest-prod.immedia-semi.com'),'',false,(r)=>{
+		//{"tier":"e003","account_id":114085,"tulsa_id":3864463}
+		let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
+		if (rj&&rj.tier) {
+			this.write_log('>OK GET_ACCOUNT_TIER_TULSA. | '+r);
+			this.tier=rj.tier;
+			this.account_id=rj.account_id;
+			this.tulsa_id=rj.tulsa_id;
+			callback(r);
+		} else {
+			this.write_log('>ERROR GET_ACCOUNT_TIER_TULSA FAILED. | '+r);
+			callback('{"error":"ERROR GET_ACCOUNT_TIER_TULSA FAILED. | '+r+'"}');
+		}
+	});
+}
+
+Blink.prototype.REFRESH = function (callback) {
+	let options={'method':'POST','hostname':'api.oauth.blink.com','path':'/oauth/token','headers':{'content-type':'application/json','hardware_id':this.hardware_id},'port':'443'}
+	let data={'grant_type':'refresh_token','client_id':'android','scope':'client'}
+	if (this.refresh_token) {
+		this.request(options,JSON.stringify(data),false,(r)=>{
+			//{"access_token":"...","expires_in":14400,"refresh_token":"...","scope":"client","token_type":"Bearer"}
+			//{"err_msg":"bad request response from dependency service","error":"Verification Code is invalid or expired"}
+			let rj=undefined; try {rj=JSON.parse(r)} catch(e){r=undefined};
+			if (rj&&rj.access_token) {
+				this.write_log('>OK REFRESH.');
+				//this.all_token=rj;
+				this.access_token=rj.access_token;
+				this.refresh_token=rj.refresh_token;
+				this.token_type=rj.token_type;
+				if (rj.expires_in>0) {
+					clearTimeout(this.refresh_timeout);
+					this.refresh_timeout=setTimeout(()=>{this.REFRESH(()=>{})},1000*(rj.expires_in-600)); // REFRESH in 240 minutes (-10 minutes buffer)
+				}
+				//this.access_token_content=this.get_access_token_content();
+				this.client_verification_required=false;
+				callback(r);
+			} else {
+				this.write_log('>ERROR REFRESH FAILED. | '+r);
+				callback('{"error":"ERROR REFRESH FAILED. | '+r+'"}');
+			}
+		});
+	} else {
+		this.write_log('>REFRESH: REFRESH_TOKEN REQUIRED.');
+		callback('{"error":"REFRESH: REFRESH_TOKEN REQUIRED."}');
+	}
+}
+
+Blink.prototype.request = function (options,data,is_binary,callback) {
+	this.write_log('REQUEST: '+options.method+': '+options.hostname+options.path); //+' '+JSON.stringify(options.headers)+' '+((options.method=='POST')?data:''));
+	let req = https.request(options, res => {
+	  let r='';
+	  if (is_binary) {res.setEncoding('binary')};
+	  res.on('data', d => {r+=d})
+	  res.on('end', function () {callback(r)})
+	})
+	req.on('error', error => {
+	  console.error('==ERROR== ',error)
+	})
+	req.write(data);
+	req.end();
+}
+
+Blink.prototype.get_blinkRequestOptions = function (path,method,headers,hostname) {
+	let bro = new Object();
+	bro.path=path||'';
+	bro.method=method||'GET';
+	bro.headers=headers||(this.access_token?{'Authorization':this.token_type+' '+this.access_token}:undefined);
+	bro.hostname=hostname||'rest-'+(this.tier||'prod')+'.immedia-semi.com';
+	bro.port=443;
+	return bro;
 }
 
 Blink.prototype.LOGOUT = function (callback) {
-	if (this.account_id&&this.client_id) {
-		this.request(this.get_blinkRequestOptions('/api/v4/account/'+this.account_id+'/client/'+this.client_id+'/logout','POST'),'',false,(r)=>{
-		    this.write_log('>OK LOGOUT '+r);
-			this.email=undefined;
-			this.password=undefined;
-			this.authtoken=undefined;
-			this.client_verification_required=undefined;
-			callback(r);
-		});
-	} else {this.write_log('>ERROR ACCOUNT_ID AND CLIENT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID AND CLIENT_ID REQUIRED."}');}
+	this.username=undefined;
+	this.password=undefined;
+	//this.hardware_id=undefined;
+	
+	// LOGIN =>
+	this.pin=undefined;
+
+	// VERIFY =>
+	this.access_token=undefined;
+	this.refresh_token=undefined;
+	this.token_type=undefined;
+	clearTimeout(this.refresh_timeout);
+	this.refresh_timeout=undefined;
+
+	// GET_ACCOUNT_TIER_TULSA =>
+	this.account_id=undefined;
+	this.tier=undefined;
+	this.tulsa_id=undefined;
+
+	//this.accepted_age_of_data_in_seconds=undefined;
+	this.client_verification_required=undefined;
+	
+	this.homescreen={};
+	this.videoevents={};
+	this.lastupdate=undefined;
+	this.cache=new Cache(50);
+	this.log=new Logger(150);
+
+    this.write_log('>OK LOGOUT.');
+	callback(JSON.stringify({}));
 }
 
 Blink.prototype.GET_INDEX = function (callback,force_update,force_cache) {
@@ -106,12 +218,18 @@ Blink.prototype.GET_INDEX = function (callback,force_update,force_cache) {
 			Promise.all([homescreen,videoevents]).then((values_of_all_promises_array)=>{
 				this.lastupdate=stopwatch();
 				this.write_log('>OK UPDATED STATUS (HOMESCREEN AND VIDEOEVENTS)');
-				this.GET_INDEX((r)=>{
-					callback(r);
-				},false,true);
+				//this.write_log('>PROMISES: '+JSON.stringify(values_of_all_promises_array));
+				this.write_log('>THIS.HOMESCREEN: '+JSON.stringify(this.homescreen));
+				if (JSON.stringify(this.homescreen)===JSON.stringify({})) { /// TRY
+					this.write_log('>NO DATA. CALLING LOGIN.');
+					this.LOGIN(callback);
+				} else {
+					this.write_log('>DATA AVAILABLE/UPDATED.');
+					this.GET_INDEX((r)=>{callback(r)},false,true);
+				}
 			});
 
-		} else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}	
+		} else {this.write_log('>GET_INDEX: LOGIN REQUIRED.'); callback('{"error":"GET_INDEX: LOGIN REQUIRED."}');}	
     }
 }
 
@@ -123,36 +241,56 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 				this.homescreen=rj;
 				if (this.homescreen && this.homescreen.cameras) {
 
-					// hack: some cams are listed as "owls"
+					// hack: some cams are listed as "owls" or "doorbells"
 					// copy them to cameras-list ... should do the trick
-					let also_show_owls=false; // Deactivated. "owls" (Blink Minis) don't work with this API. Videos show up in captured video list (even if not listed in homescreen.cameras), but capturing images or videos with current API won't work.
-					if (also_show_owls) {
+					let also_show_owls_and_doorbells=true; // Deactivated. "owls" (Blink Minis) don't work with this API. Videos show up in captured video list (even if not listed in homescreen.cameras), but capturing images or videos with current API won't work.
+					if (also_show_owls_and_doorbells) {
 						if (this.homescreen.owls) {
 							let cams_and_owls = this.homescreen.cameras.concat(this.homescreen.owls);
 							this.homescreen.cameras=cams_and_owls;
 						}				
+						if (this.homescreen.doorbells) {
+							let cams_and_doorbells = this.homescreen.cameras.concat(this.homescreen.doorbells);
+							this.homescreen.cameras=cams_and_doorbells;
+						}				
 					}
 
-					// store last thumbnail_updated_at
+					// store last thumbnail_updated_at - and sort
 					this.homescreen.cameras.forEach((c)=>{
-						let updated_at_store=this.cam_last_update_store.find(c.id);
-						if (!updated_at_store) {
-							this.cam_last_update_store.add(new CamLastUpdateStoreItem(c.id,c.updated_at));
-							c.thumbnail_updated_at=c.updated_at;
-						} else {
-							c.thumbnail_updated_at=updated_at_store.updated_at;
+						let ts=(/ts=(\d*)/g.exec(c.thumbnail)); 
+						if (ts) {
+							// if it's an automated video-thumbnail, there will be a "ts" in the thumbnail-URL ...
+							c.thumbnail_updated_at=ts[1]; 
 						}
+						/*
+						 else {
+							// ...else there will be a value for the last manual update of the image in cam_last_update_store
+							c.thumbnail_updated_at=this.cam_last_update_store.find(c.id);
+							// just saw that even the manual updates have a "ts" in URL... so this will never be used
+						}
+						*/
 					});
+					this.homescreen.cameras.sort((a,b)=>b.thumbnail_updated_at-a.thumbnail_updated_at);
 
-					//this.homescreen.cameras.sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
-					this.homescreen.cameras.sort((a,b)=>new Date(b.thumbnail_updated_at)-new Date(a.thumbnail_updated_at));
 				};
 		     	this.write_log('>OK GET_HOMESCREEN');
+		     	this.homescreen={cameras:this.homescreen.cameras}; // this is all we need
+				this.homescreen.cameras=this.homescreen.cameras.map(c=>{ return {// this is all we need
+		     		id:c.id,
+		     		network_id:c.network_id,
+		     		thumbnail:c.thumbnail,
+		     		thumbnail_updated_at:c.thumbnail_updated_at,
+		     		name:c.name,
+		     		signals:{temp:c.signals?c.signals.temp:undefined},
+		     		status:c.status
+				}});
+
+				callback(JSON.stringify(this.homescreen));
 			} else {
-				this.homescreen={};
 				this.write_log('>ERROR DID NOT GET_HOMESCREEN');
+				this.homescreen={};
+				callback(r); 
 			}
-			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
 }
@@ -176,11 +314,19 @@ Blink.prototype.GET_VIDEO_EVENTS = function (callback) {
 
 				this.videoevents=rj;
 				this.write_log('>OK GET_VIDEO_EVENTS');
+		     	this.videoevents={media:this.videoevents.media}; // this is all we need
+		     	this.videoevents.media=this.videoevents.media.map(m=>{ return { // this is all we need
+		     		id:m.id,
+		     		thumbnail:m.thumbnail,
+		     		created_at:m.created_at
+		     	}});
+
+				callback(JSON.stringify(this.videoevents));
 			} else {
-				this.videoevents={};
 				this.write_log('>ERROR DID NOT GET_VIDEO_EVENTS');
+				this.videoevents={};
+				callback(r);
 			}
-			callback(r);
 		});
     } else {this.write_log('>ERROR ACCOUNT_ID REQUIRED.'); callback('{"error":"ACCOUNT_ID REQUIRED."}');}
 }
@@ -211,7 +357,6 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		cam_id=this.homescreen.cameras[cam_array_number].id;
 		let network_id=this.homescreen.cameras[cam_array_number].network_id;
 		if (network_id) {
-			this.cam_last_update_store.delete(cam_id);
 		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
 		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network_id);
 		     	callback(r);
@@ -236,7 +381,7 @@ Blink.prototype.CAPTURE_VIDEO = function (cam_id,n,callback) {
 }
 
 Blink.prototype.GET_COMMAND_STATUS = function (cam_id,command_id,callback) {
-	if (this.homescreen&&this.homescreen.networks&&this.homescreen.cameras&&command_id) {
+	if (this.homescreen&&this.homescreen.cameras&&command_id) {
 		let cam_array_number=this.homescreen.cameras.findIndex((c)=>cam_id==c.id);
 		if (cam_array_number==-1) {cam_array_number=0}
 		let network_id=this.homescreen.cameras[cam_array_number].network_id;
@@ -297,42 +442,38 @@ Blink.prototype.write_log = function (s) {
 	//console.log(s);
 }
 
-Blink.prototype.get_blinkRequestOptions = function (path,method,headers) {
-	let bro = new Object();
-	bro.path=path||'';
-	bro.method=method||'GET';
-	bro.headers=headers||(this.authtoken?{'TOKEN_AUTH':this.authtoken}:undefined);
-	bro.hostname='rest-'+(this.region_tier||'prod')+'.immedia-semi.com';
-	bro.port=443;
-	return bro;
-}
-
-Blink.prototype.request = function (options,data,is_binary,callback) {
-	this.write_log('... '+options.method+': '+options.hostname+options.path); //+' '+JSON.stringify(options.headers)+' '+((options.method=='POST')?data:''));
-	let req = https.request(options, res => {
-	  let r='';
-	  if (is_binary) {res.setEncoding('binary')};
-	  res.on('data', d => {r+=d})
-	  res.on('end', function () {callback(r)})
-	})
-	req.on('error', error => {
-	  console.error('==ERROR== ',error)
-	})
-	req.write(data);
-	req.end();
-}
-
 function Cache(max_items) {this.items=[];this.max_items=max_items||1;}
 function Cacheitem(id,data) {this.id=id;this.data=data;}
 Cache.prototype.add = function (cacheitem) {this.items.push(cacheitem); while (this.items.length>this.max_items) {this.items.splice(0,1)};}
 Cache.prototype.get = function (id) {let f=this.items.find(i => i.id==id); return f?f.data:undefined}
 
-function CamLastUpdateStore(max_items) {this.items=[];this.max_items=max_items||100;}
-function CamLastUpdateStoreItem(id,updated_at) {this.id=id;this.updated_at=updated_at}
-CamLastUpdateStore.prototype.add = function (newitem) {this.items.push(newitem); while (this.items.length>this.max_items) {this.items.splice(0,1)};}
-CamLastUpdateStore.prototype.find = function (id) {let f=this.items.find(i => i.id==id); return f;}
-CamLastUpdateStore.prototype.delete = function (id) {this.items=this.items.filter(i => i.id!=id); return true;}
-
 function Logger(maxlength) {this.maxlength=(maxlength||25); this.list=[];}
 Logger.prototype.add = function (s) {this.list.push(s); while (this.list.length>this.maxlength) {this.list.splice(0,1)};}
 Logger.prototype.read = function (latest) {return latest?this.list[this.length-1]:this.list.reduce((a,c)=>a+c+'\n','');}
+
+
+/* https://github.com/fronzbot/blinkpy/issues/1114 */
+/* TEST ================================================================================================
+var config = {}; try {config=require('./config.json')} catch(err){};
+var blink = new Blink(config.username,config.password,config.hardware_id,config.accepted_age_of_data_in_seconds);
+
+var _TOKEN={"access_token":"...","expires_in":14400,"refresh_token":"...","scope":"client","token_type":"Bearer"}
+blink.access_token=_TOKEN.access_token;
+blink.refresh_token=_TOKEN.refresh_token;
+blink.token_type=_TOKEN.token_type;
+
+var _ACCOUNT_TIER_TULSA={"tier":"e003","account_id":123456,"tulsa_id":1234567}
+blink.tier=_ACCOUNT_TIER_TULSA.tier;
+blink.account_id=_ACCOUNT_TIER_TULSA.account_id;
+blink.tulsa_id=_ACCOUNT_TIER_TULSA.tulsa_id;
+
+console.log('\n==========================\n'+JSON.stringify(blink)+'\n==========================\n');
+
+//blink.LOGIN((r)=>{console.log('RESPONSE: '+r)});
+//blink.VERIFY('065964',(r)=>{console.log('RESPONSE: '+r)});
+//blink.GET_ACCOUNT_TIER_TULSA((r)=>{console.log('RESPONSE: '+r)})
+//blink.REFRESH((r)=>{console.log('RESPONSE: '+r)});
+//blink.GET_HOMESCREEN((r)=>{console.log('RESPONSE: '+r)});
+//blink.GET_INDEX((r)=>{console.log('RESPONSE: '+r)});
+//blink.LOGOUT((r)=>{console.log('RESPONSE: '+r)});
+*/

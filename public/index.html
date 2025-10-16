@@ -51,6 +51,8 @@
 			let cvoverlaytext=document.getElementById('cam_image_overlay_text');
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
 			let h=hv?hv.homescreen:undefined;
+			if (!h) {return}
+			
 			let cam_array_number=0; // 0 get's the latest image because blink.js sorts cameras-array by updated_at
 			// try to find the cam of the image that is currently displayed (cjpg.cam_id)
 			if (cjpg.cam_id) {
@@ -60,7 +62,7 @@
 			if (next) {cam_array_number++}
 			if (cam_array_number>=h.cameras.length) {cam_array_number=0}
 			cjpg.cam_id=h.cameras[cam_array_number].id;
-			cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].updated_at;
+			cjpg.src='cam/'+h.cameras[cam_array_number].id+'?'+h.cameras[cam_array_number].thumbnail_updated_at;
 			cjpg.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
 			//cvoverlaytext.style.display='none';
 			cvoverlay.onclick=()=>{window.open(document.getElementById('cam_jpg').src,'_self');};
@@ -136,6 +138,7 @@
 		function display(homescreen_and_videoevents,video_id) {
 			if (homescreen_and_videoevents!==undefined) {global_homescreen_and_videoevents=homescreen_and_videoevents};
 			let hv=global_homescreen_and_videoevents?JSON.parse(global_homescreen_and_videoevents):undefined;
+			if (hv.error!==undefined) {capture_buttons_active(false); ticker(hv.error,undefined,'rgba(150,50,50,0.75)'); return}
 			let h=hv?hv.homescreen:undefined;
 			let v=hv?hv.videoevents:undefined;
 			let cjpg=document.getElementById('cam_jpg');
@@ -169,13 +172,19 @@
 				if (h&&h.cameras) {
 					let camera=h.cameras[show_cam()];
 					let temp='';
-					if (camera.signals) {
+					if ((camera.signals)&&(camera.signals.temp)) {
 					  temp=' &nbsp;|&nbsp; '+Math.round((camera.signals.temp-32)*5/9)+'°C';
 					}
+					/*
+					const myRe = /ts=(\d*)/g; //"/api/v3/media/accounts/114085/networks/130773/catalina/175373/thumbnail/thumbnail.jpg?ts=1759677856&ext="
+					const myArray = myRe.exec(camera.thumbnail);
+					let thumbnail_ts=myArray[1]+' '+camera.thumbnail;
+					console.log(thumbnail_ts+' --- '+camera.thumbnail_updated_at+' > '+new Date(myArray[1]*1000).toLocaleString());
+					*/
 					let status='';
-					if (camera.status=='done'||'online') {status='<span class=status>online</span>';}
+					if (['done','online'].includes(camera.status)) {status='<span class=status>online</span>';}
 					else {status='<span class=warning>'+camera.status+'</span>';}
-					cdate.innerHTML='<span class=info>'+new Date(camera.thumbnail_updated_at).toLocaleString()+temp+'</span>'+status;
+					cdate.innerHTML='<span class=info>'+new Date(camera.thumbnail_updated_at*1000).toLocaleString()+temp+'</span>'+status; //thumbnail_
 				}
 			}
 
@@ -193,12 +202,13 @@
 				}
 			}
 			
-			if (!h||h&&!h.account) {
+			if (!h||h&&!h.cameras) {
 				ticker('Blink needs to authenticate to the server.',undefined,'rgba(150,50,50,0.75)');
 				if (++login_attempts<=3) {
 					setTimeout(()=>{
-						ticker('Authentication in progress. Please stand by!',undefined,'rgba(50,150,50,0.75)');
-						blink_login(true);
+						// blink_login(true); // service will take care by itself
+						ticker('Authentication in progress. Please stand by!',undefined,'rgba(50,150,50,0.75)'); /// TRY
+						setTimeout(()=>{blink_verify()},5000); /// TRY
 					},2500);
 				} else {
 					clearTimeout(login_timer); 
