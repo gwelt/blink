@@ -241,9 +241,9 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 				this.homescreen=rj;
 				if (this.homescreen && this.homescreen.cameras) {
 
-					// hack: some cams are listed as "owls" or "doorbells"
-					// copy them to cameras-list ... should do the trick
-					let also_show_owls_and_doorbells=true; // Deactivated. "owls" (Blink Minis) don't work with this API. Videos show up in captured video list (even if not listed in homescreen.cameras), but capturing images or videos with current API won't work.
+					// some cams are listed as "owls" or "doorbells"
+					// copy them to cameras-list
+					let also_show_owls_and_doorbells=true;
 					if (also_show_owls_and_doorbells) {
 						if (this.homescreen.owls) {
 							let cams_and_owls = this.homescreen.cameras.concat(this.homescreen.owls);
@@ -262,13 +262,12 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 							// if it's an automated video-thumbnail, there will be a "ts" in the thumbnail-URL ...
 							c.thumbnail_updated_at=ts[1]; 
 						}
-						/*
-						 else {
-							// ...else there will be a value for the last manual update of the image in cam_last_update_store
-							c.thumbnail_updated_at=this.cam_last_update_store.find(c.id);
-							// just saw that even the manual updates have a "ts" in URL... so this will never be used
+						let type=(/\/networks\/\d*\/([^\/]*)/g.exec(c.thumbnail)); 
+						if (type) {
+							// /api/v3/media/accounts/114085/networks/130773/catalina/120174/thumbnail/thumbnail.jpg?ts=1760729764
+							c.type=type[1]; 
 						}
-						*/
+
 					});
 					this.homescreen.cameras.sort((a,b)=>b.thumbnail_updated_at-a.thumbnail_updated_at);
 
@@ -278,6 +277,7 @@ Blink.prototype.GET_HOMESCREEN = function (callback) {
 				this.homescreen.cameras=this.homescreen.cameras.map(c=>{ return {// this is all we need
 		     		id:c.id,
 		     		network_id:c.network_id,
+		     		type:c.type,
 		     		thumbnail:c.thumbnail,
 		     		thumbnail_updated_at:c.thumbnail_updated_at,
 		     		name:c.name,
@@ -357,7 +357,13 @@ Blink.prototype.UPDATE_CAM = function (cam_id,n,callback) {
 		cam_id=this.homescreen.cameras[cam_array_number].id;
 		let network_id=this.homescreen.cameras[cam_array_number].network_id;
 		if (network_id) {
-		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/camera/'+cam_id+'/thumbnail','POST'),'',false,(r)=>{
+		    // catalina: /network/{NetworkID}/camera/{CameraID}/thumbnail
+			let path='/network/'+network_id+'/camera/'+cam_id;
+		    // owl: /api/v1/accounts/{accountID}/networks/{NetworkID}/owls/{CameraID}/thumbnail
+			if (this.homescreen.cameras[cam_array_number].type=='owl') {path='/api/v1/accounts/'+this.account_id+'/networks/'+network_id+'/owls/'+cam_id;}
+		    // lotus: /api/v1/accounts/{accountID}/networks/{NetworkID}/doorbells/{CameraID}/thumbnail
+			if (this.homescreen.cameras[cam_array_number].type=='lotus') {path='/api/v1/accounts/'+this.account_id+'/networks/'+network_id+'/doorbells/'+cam_id;}
+		    this.request(this.get_blinkRequestOptions(path+'/thumbnail','POST'),'',false,(r)=>{
 		     	this.write_log('>OK UPDATE_CAM '+cam_id+' @ '+network_id);
 		     	callback(r);
 		    });
@@ -372,7 +378,13 @@ Blink.prototype.CAPTURE_VIDEO = function (cam_id,n,callback) {
 		cam_id=this.homescreen.cameras[cam_array_number].id;
 		let network_id=this.homescreen.cameras[cam_array_number].network_id;
 		if (network_id) {
-		    this.request(this.get_blinkRequestOptions('/network/'+network_id+'/camera/'+cam_id+'/clip','POST'),'',false,(r)=>{
+		    // catalina: /network/{NetworkID}/camera/{CameraID}/clip
+			let path='/network/'+network_id+'/camera/'+cam_id;
+		    // owl: /api/v1/accounts/{accountID}/networks/{NetworkID}/owls/{CameraID}/clip
+			if (this.homescreen.cameras[cam_array_number].type=='owl') {path='/api/v1/accounts/'+this.account_id+'/networks/'+network_id+'/owls/'+cam_id;}
+		    // lotus: /api/v1/accounts/{accountID}/networks/{NetworkID}/doorbells/{CameraID}/clip
+			if (this.homescreen.cameras[cam_array_number].type=='lotus') {path='/api/v1/accounts/'+this.account_id+'/networks/'+network_id+'/doorbells/'+cam_id;}
+		    this.request(this.get_blinkRequestOptions(path+'/clip','POST'),'',false,(r)=>{
 		     	this.write_log('>OK CAPTURE_VIDEO '+cam_id+' @ '+network_id);
 		    	callback(r);
 		    });

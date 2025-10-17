@@ -63,8 +63,8 @@ const maschinen_preisleistungsliste = [
 var bauer=new Bauer();
 kk_HTML(bauer);
 bauer.liest_konto();
-setInterval(()=>{bauer.schreibt_konto()},60000);
-window.onunload = function() {bauer.schreibt_konto()}
+setInterval(()=>{bauer.schreibt_konto()},15000);
+//window.onunload = function() {bauer.schreibt_konto()}
 
 /* === HTML-DARSTELLUNG ================================================================= */
 function kk_HTML(bauer) {
