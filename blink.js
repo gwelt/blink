@@ -111,7 +111,7 @@ Blink.prototype.GET_ACCOUNT_TIER_TULSA = function (callback) {
 
 Blink.prototype.REFRESH = function (callback) {
 	let options={'method':'POST','hostname':'api.oauth.blink.com','path':'/oauth/token','headers':{'content-type':'application/json','hardware_id':this.hardware_id},'port':'443'}
-	let data={'grant_type':'refresh_token','client_id':'android','scope':'client'}
+	let data={'refresh_token':this.refresh_token,'grant_type':'refresh_token','client_id':'android','scope':'client'}
 	if (this.refresh_token) {
 		this.request(options,JSON.stringify(data),false,(r)=>{
 			//{"access_token":"...","expires_in":14400,"refresh_token":"...","scope":"client","token_type":"Bearer"}
